@@ -51,7 +51,7 @@ class SpotifyAudioSourceManager(
 
     init {
         thread = Thread {
-            while (!spotifySession!!.isValid) {
+            while (spotifySession != null && !spotifySession!!.isValid) {
                 try {
                     createSpotifySession()
                 } catch (e: Exception) {
