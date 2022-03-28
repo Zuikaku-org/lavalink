@@ -1,0 +1,32 @@
+# Logs
+logs/
+credentials.json
+
+# Build
+target/
+build/
+out/
+bin/
+
+
+# Idea Settings
+.idea/
+*.iml
+
+# Gradle shit
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+application.yml
+
+
+# Jars
+*.jar
+
+# Eclipse or maven shit
+*/dependency-reduced-pom.xml
+.project
+.classpath
+.settings
+
+VERSION.txt
