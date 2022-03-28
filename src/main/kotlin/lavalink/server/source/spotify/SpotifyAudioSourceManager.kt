@@ -51,16 +51,34 @@ class SpotifyAudioSourceManager(
 
     init {
         thread = Thread {
-            while (spotifySession != null && !spotifySession!!.isValid) {
-                try {
-                    createSpotifySession()
-                } catch (e: Exception) {
-                    log.info("Failed to create spotify session, reconnect in 10 seconds", e)
-                    spotifySession = null
-                    Thread.sleep(10000L)
-                } finally {
-                    log.info("Spotify session created")
-                    Thread.sleep(3600000L)
+            while (true) {
+                if (spotifySession != null) {
+                    if (!spotifySession!!.isValid) {
+                        try {
+                            createSpotifySession()
+                        } catch (e: Exception) {
+                            log.info("Failed to create spotify session, trying to connect again", e)
+                            spotifySession = null
+                            Thread.sleep(10000L)
+                        } finally {
+                            log.info("Spotify session created")
+                            Thread.sleep(3600000L)
+                        }
+                    } else {
+                        log.info("Current spotify session is valid")
+                        Thread.sleep(60000L)
+                    }
+                } else {
+                    try {
+                        createSpotifySession()
+                    } catch (e: Exception) {
+                        log.info("Failed to create spotify session", e)
+                        spotifySession = null
+                        Thread.sleep(10000L)
+                    } finally {
+                        log.info("Spotify session created")
+                        Thread.sleep(3600000L)
+                    }
                 }
             }
         }
@@ -93,8 +111,7 @@ class SpotifyAudioSourceManager(
             .setStoreCredentials(true)
             .setConnectionTimeout(5)
             .build()
-        val buildSpotifySession = Session
-            .Builder(spotifySessionConfiguration)
+        val buildSpotifySession = Session.Builder(spotifySessionConfiguration)
             .userPass(username, password)
         spotifySession = buildSpotifySession.create()
     }
