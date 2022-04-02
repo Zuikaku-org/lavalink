@@ -26,7 +26,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 buildscript {
   val kotlinVersion = "1.6.10"
   val gradleGitVersion = "2.3.2"
-  val springBootVersion = "2.6.4"
+  val springBootVersion = "2.6.5"
   val sonarqubeVersion = "3.3"
   val testLoggerVersion = "3.1.0"
   val librespotLibVersion = "1.6.2"
@@ -52,7 +52,7 @@ buildscript {
 plugins {
   application
   idea
-  id("org.springframework.boot") version "2.6.4"
+  id("org.springframework.boot") version "2.6.5"
   id("com.gorylenko.gradle-git-properties") version "2.3.2"
   id("org.ajoberstar.grgit") version "4.1.1"
   kotlin("jvm") version "1.6.10"
@@ -81,20 +81,20 @@ repositories {
 
 val kotlinVersion = "1.6.10"
 
-val lavaplayerVersion = "ec43ed0"
+val lavaplayerVersion = "0db9ab6"
 val lavaplayerIpRotatorVersion = "0.2.3"
 val nettyEpollVersion = "4.1.75.Final:linux-x86_64"
 val lavadspVersion = "0.7.7"
 val librespotLibVersion = "1.6.2"
 
-val springBootVersion = "2.6.4"
-val springWebSocketVersion = "5.3.16"
+val springBootVersion = "2.6.5"
+val springWebSocketVersion = "5.3.17"
 val prometheusVersion = "0.15.0"
 val koeVersion = "fbd5241"
 val logbackVersion = "1.2.11"
-val sentryVersion = "5.6.2"
-val oshiVersion = "6.1.4"
-val jsonOrgVersion = "20211205"
+val sentryVersion = "5.7.0"
+val oshiVersion = "6.1.5"
+val jsonOrgVersion = "20220320"
 val gsonVersion = "2.9.0"
 val spotbugsAnnotationsVersion = "4.6.0"
 
