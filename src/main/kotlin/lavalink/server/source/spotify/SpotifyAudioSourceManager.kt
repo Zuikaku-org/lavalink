@@ -30,19 +30,10 @@ class SpotifyAudioSourceManager(
 
     val spotifyAPI = "https://api.spotify.com/v1/"
     val userAgent =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
-
-    private var spotifyTrackResolver: SpotifyTrackResolver? = null
-    private var spotifySearchResolver: SpotifySearchResolver? = null
-    private var spotifyPlaylistResolver: SpotifyPlaylistResolver? = null
-    private var spotifyAlbumResolver: SpotifyAlbumResolver? = null
-    private var spotifyArtistResolver: SpotifyArtistResolver? = null
-    private var spotifyEpisodeResolver: SpotifyEpisodeResolver? = null
-    private var spotifyShowResolver: SpotifyShowResolver? = null
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (HTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
 
     var spotifySession: Session? = null
 
-    private val thread: Thread
     private val log = LoggerFactory.getLogger(SpotifyAudioSourceManager::class.java)
 
     override fun getSourceName(): String {
@@ -50,51 +41,14 @@ class SpotifyAudioSourceManager(
     }
 
     init {
-        thread = Thread {
-            while (true) {
-                if (spotifySession != null) {
-                    if (!spotifySession!!.isValid) {
-                        try {
-                            createSpotifySession()
-                        } catch (e: Exception) {
-                            log.info("Failed to create spotify session, trying to connect again", e)
-                            spotifySession = null
-                            Thread.sleep(10000L)
-                        } finally {
-                            log.info("Spotify session created")
-                            Thread.sleep(3600000L)
-                        }
-                    } else {
-                        log.info("Current spotify session is valid")
-                        Thread.sleep(60000L)
-                    }
-                } else {
-                    try {
-                        createSpotifySession()
-                    } catch (e: Exception) {
-                        log.info("Failed to create spotify session", e)
-                        spotifySession = null
-                        Thread.sleep(10000L)
-                    } finally {
-                        log.info("Spotify session created")
-                        Thread.sleep(3600000L)
-                    }
-                }
-            }
+        try {
+            createSpotifySession()
+        } catch (e: Exception) {
+            log.info("Failed to create spotify session, trying to connect again")
+            spotifySession = null
+        } finally {
+            log.info("Spotify session created")
         }
-        thread.isDaemon = true
-        thread.start()
-        initResolver()
-    }
-
-    private fun initResolver() {
-        spotifySearchResolver = SpotifySearchResolver(this)
-        spotifyTrackResolver = SpotifyTrackResolver(this)
-        spotifyPlaylistResolver = SpotifyPlaylistResolver(this)
-        spotifyAlbumResolver = SpotifyAlbumResolver(this)
-        spotifyArtistResolver = SpotifyArtistResolver(this)
-        spotifyEpisodeResolver = SpotifyEpisodeResolver(this)
-        spotifyShowResolver = SpotifyShowResolver(this)
     }
 
     @Throws(
@@ -104,22 +58,24 @@ class SpotifyAudioSourceManager(
         MercuryClient.MercuryException::class
     )
     private fun createSpotifySession() {
+        spotifySession = null
         val spotifySessionConfiguration = Session.Configuration
             .Builder()
             .setRetryOnChunkError(false)
             .setCacheEnabled(false)
             .setStoreCredentials(true)
-            .setConnectionTimeout(5)
             .build()
         val buildSpotifySession = Session.Builder(spotifySessionConfiguration)
             .userPass(username, password)
         spotifySession = buildSpotifySession.create()
+        spotifySession?.addCloseListener {
+            createSpotifySession()
+        }
     }
 
     override fun loadItem(manager: AudioPlayerManager, reference: AudioReference): AudioItem? {
         if (reference.identifier.startsWith(SEARCH_PREFIX)) {
-            return spotifySearchResolver!!
-                .fetch(reference.identifier.substring(SEARCH_PREFIX.length))
+            return SpotifySearchResolver(this, reference.identifier.substring(SEARCH_PREFIX.length)).fetch()
         }
         val matcher = SPOTIFY_URL_PATTERN.matcher(reference.identifier)
         if (!matcher.matches()) {
@@ -128,22 +84,22 @@ class SpotifyAudioSourceManager(
         val type = matcher.group("type")
         val identifier = matcher.group("identifier")
         if (type == "track") {
-            return spotifyTrackResolver!!.fetch(identifier)
+            return SpotifyTrackResolver(this, identifier).fetch()
         }
         if (type == "playlist") {
-            return spotifyPlaylistResolver!!.fetch(identifier)
+            return SpotifyPlaylistResolver(this, identifier).fetch()
         }
         if (type == "album") {
-            return spotifyAlbumResolver!!.fetch(identifier)
+            return SpotifyAlbumResolver(this, identifier).fetch()
         }
         if (type == "artist") {
-            return spotifyArtistResolver!!.fetch(identifier)
+            return SpotifyArtistResolver(this, identifier).fetch()
         }
         if (type == "episode") {
-            return spotifyEpisodeResolver!!.fetch(identifier)
+            return SpotifyEpisodeResolver(this, identifier).fetch()
         }
         if (type == "show") {
-            return spotifyShowResolver!!.fetch(identifier)
+            return SpotifyShowResolver(this, identifier).fetch()
         }
         return null
     }
@@ -158,7 +114,6 @@ class SpotifyAudioSourceManager(
     }
 
     override fun shutdown() {
-        thread.interrupt()
         try {
             spotifySession?.close()
         } catch (e: Exception) {

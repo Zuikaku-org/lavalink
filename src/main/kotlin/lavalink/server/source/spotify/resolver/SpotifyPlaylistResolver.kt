@@ -14,8 +14,11 @@ import xyz.gianlu.librespot.metadata.PlayableId
 import xyz.gianlu.librespot.metadata.TrackId
 import java.net.URI
 
-class SpotifyPlaylistResolver(private val spotifyAudioSourceManager: SpotifyAudioSourceManager) {
-    fun fetch(identifier: String): AudioPlaylist {
+class SpotifyPlaylistResolver(
+    private val spotifyAudioSourceManager: SpotifyAudioSourceManager,
+    private val identifier: String
+) {
+    fun fetch(): AudioPlaylist {
         try {
             val uriRequest = URI.create(
                 spotifyAudioSourceManager.spotifyAPI

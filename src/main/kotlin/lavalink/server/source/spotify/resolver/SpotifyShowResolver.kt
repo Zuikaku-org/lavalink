@@ -12,8 +12,11 @@ import xyz.gianlu.librespot.metadata.ImageId
 import xyz.gianlu.librespot.metadata.PlayableId
 import xyz.gianlu.librespot.metadata.ShowId
 
-class SpotifyShowResolver(private val spotifyAudioSourceManager: SpotifyAudioSourceManager) {
-    fun fetch(identifier: String): AudioPlaylist {
+class SpotifyShowResolver(
+    private val spotifyAudioSourceManager: SpotifyAudioSourceManager,
+    private val identifier: String
+) {
+    fun fetch(): AudioPlaylist {
         try {
             val showMetadata = spotifyAudioSourceManager
                 .spotifySession?.api()?.getMetadata4Show(ShowId.fromUri("spotify:show:$identifier"))

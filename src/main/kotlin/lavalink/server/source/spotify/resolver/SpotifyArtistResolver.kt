@@ -12,8 +12,11 @@ import xyz.gianlu.librespot.metadata.ImageId
 import xyz.gianlu.librespot.metadata.PlayableId
 import xyz.gianlu.librespot.metadata.TrackId
 
-class SpotifyArtistResolver(private val spotifyAudioSourceManager: SpotifyAudioSourceManager) {
-    fun fetch(identifier: String): AudioPlaylist {
+class SpotifyArtistResolver(
+    private val spotifyAudioSourceManager: SpotifyAudioSourceManager,
+    private val identifier: String
+) {
+    fun fetch(): AudioPlaylist {
         try {
             val artistMetadata = spotifyAudioSourceManager
                 .spotifySession?.api()?.getMetadata4Artist(ArtistId.fromUri("spotify:artist:$identifier"))

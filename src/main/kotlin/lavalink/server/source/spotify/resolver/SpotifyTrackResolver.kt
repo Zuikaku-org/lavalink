@@ -9,8 +9,11 @@ import xyz.gianlu.librespot.metadata.ImageId
 import xyz.gianlu.librespot.metadata.PlayableId
 import xyz.gianlu.librespot.metadata.TrackId
 
-class SpotifyTrackResolver(private val spotifyAudioSourceManager: SpotifyAudioSourceManager) {
-    fun fetch(identifier: String): AudioTrack {
+class SpotifyTrackResolver(
+    private val spotifyAudioSourceManager: SpotifyAudioSourceManager,
+    private val identifier: String
+) {
+    fun fetch(): AudioTrack {
         try {
             val trackMetadata = spotifyAudioSourceManager
                 .spotifySession?.api()?.getMetadata4Track(TrackId.fromUri("spotify:track:$identifier"))

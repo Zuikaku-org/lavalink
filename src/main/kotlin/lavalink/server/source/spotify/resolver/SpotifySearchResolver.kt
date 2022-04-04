@@ -9,8 +9,11 @@ import xyz.gianlu.librespot.core.SearchManager
 import xyz.gianlu.librespot.metadata.PlayableId
 import xyz.gianlu.librespot.metadata.TrackId
 
-class SpotifySearchResolver(private val spotifyAudioSourceManager: SpotifyAudioSourceManager) {
-    fun fetch(query: String): AudioItem {
+class SpotifySearchResolver(
+    private val spotifyAudioSourceManager: SpotifyAudioSourceManager,
+    private val query: String
+) {
+    fun fetch(): AudioItem {
         try {
             val spotifySearchManager = spotifyAudioSourceManager
                 .spotifySession?.search()?.request(SearchManager.SearchRequest(query))
