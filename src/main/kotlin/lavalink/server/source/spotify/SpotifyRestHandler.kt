@@ -131,12 +131,12 @@ class SpotifyRestHandler(private val defaultAudioPlayerManager: DefaultAudioPlay
         lyrics: List<String> = ArrayList()
     ): JSONObject {
         return JSONObject()
-            .put("trackId", trackId)
-            .put("trackName", trackName)
-            .put("trackArtist", trackArtist)
-            .put("trackUrl", trackUrl)
-            .put("imageUrl", imageUrl)
-            .put("language", language)
+            .put("trackId", trackId ?: JSONObject.NULL)
+            .put("trackName", trackName ?: JSONObject.NULL)
+            .put("trackArtist", trackArtist ?: JSONObject.NULL)
+            .put("trackUrl", trackUrl ?: JSONObject.NULL)
+            .put("imageUrl", imageUrl ?: JSONObject.NULL)
+            .put("language", language ?: JSONObject.NULL)
             .put("lyrics", lyrics)
     }
 
@@ -147,7 +147,7 @@ class SpotifyRestHandler(private val defaultAudioPlayerManager: DefaultAudioPlay
 
         playlist
             .put("name", result.name)
-            .put("selectedTrack", result.selectedTrack)
+            .put("selectedTrack", result.selectedTrack ?: -1)
 
         result.tracks.forEach {
             val track = JSONObject()
