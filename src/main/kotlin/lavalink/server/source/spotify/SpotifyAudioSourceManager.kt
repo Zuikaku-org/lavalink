@@ -24,15 +24,14 @@ class SpotifyAudioSourceManager(
     var spotifyPlaylistLoadLimit: Int
 ) : AudioSourceManager {
     private val SEARCH_PREFIX = "spsearch:"
-    private val SPOTIFY_REGEX =
+    val SPOTIFY_REGEX =
         "(?<link>(?:https://open\\.spotify\\.com/(?:user/[A-Za-z0-9]+/)?|spotify:)(?<type>album|playlist|track|artist|episode|show)([/:])(?<identifier>[A-Za-z0-9]+).*\$)"
-    private val SPOTIFY_URL_PATTERN = Pattern.compile(SPOTIFY_REGEX)
-
+    val SPOTIFY_URL_PATTERN = Pattern.compile(SPOTIFY_REGEX)
     val spotifyAPI = "https://api.spotify.com/v1/"
+    var spotifySession: Session? = null
+
     val userAgent =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (HTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
-
-    var spotifySession: Session? = null
 
     private val log = LoggerFactory.getLogger(SpotifyAudioSourceManager::class.java)
 
