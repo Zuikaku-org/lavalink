@@ -93,6 +93,22 @@ class AudioPlayerConfiguration {
 
       audioPlayerManager.registerSourceManager(youtube)
     }
+    if (sources.soundcloud) audioPlayerManager.registerSourceManager(
+      SoundCloudAudioSourceManager.createDefault(
+        lavaplayerProps.isSoundcloudSearchEnabled
+      )
+    )
+    if (sources.bandcamp) audioPlayerManager.registerSourceManager(BandcampAudioSourceManager())
+    if (sources.tiktok) audioPlayerManager.registerSourceManager(TiktokAudioSourceManager())
+    if (sources.twitch) audioPlayerManager.registerSourceManager(TwitchStreamAudioSourceManager())
+    if (sources.vimeo) audioPlayerManager.registerSourceManager(VimeoAudioSourceManager())
+    if (sources.reddit) audioPlayerManager.registerSourceManager(RedditAudioSourceManager())
+    if (sources.odysee) audioPlayerManager.registerSourceManager(OdyseeAudioSourceManager(lavaplayerProps.isOdyseeSearchEnabled))
+    if (sources.yandex) {
+      audioPlayerManager.registerSourceManager(YandexMusicAudioSourceManager(lavaplayerProps.isYandexMusicSearchEnabled))
+      YandexHttpContextFilter.setOAuthToken(lavaplayerProps.yandexOAuthToken)
+    }
+    if (sources.getyarn) audioPlayerManager.registerSourceManager(GetyarnAudioSourceManager())
     if (sources.spotify) {
       if (lavaplayerProps.spotifyConfig?.spotifyUsername == null) {
         log.warn("Skipping spotify source. spotifyUsername can't null or empty")
@@ -113,23 +129,12 @@ class AudioPlayerConfiguration {
               lavaplayerProps.spotifyConfig!!.spotifyUsername!!,
               lavaplayerProps.spotifyConfig!!.spotifyPassword!!,
               lavaplayerProps.spotifyConfig!!.audioQuality!!,
-              lavaplayerProps.spotifyPlaylistLoadLimit!!
+              lavaplayerProps.spotifyPlaylistLoadLimit!!,
+              lavaplayerProps.isSpotifySearchEnabled
             )
           )
       }
     }
-    if (sources.soundcloud) audioPlayerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault(lavaplayerProps.isSoundcloudSearchEnabled))
-    if (sources.bandcamp) audioPlayerManager.registerSourceManager(BandcampAudioSourceManager())
-    if (sources.tiktok) audioPlayerManager.registerSourceManager(TiktokAudioSourceManager())
-    if (sources.twitch) audioPlayerManager.registerSourceManager(TwitchStreamAudioSourceManager())
-    if (sources.vimeo) audioPlayerManager.registerSourceManager(VimeoAudioSourceManager())
-    if (sources.reddit) audioPlayerManager.registerSourceManager(RedditAudioSourceManager())
-    if (sources.odysee) audioPlayerManager.registerSourceManager(OdyseeAudioSourceManager(lavaplayerProps.isOdyseeSearchEnabled))
-    if (sources.yandex) {
-      audioPlayerManager.registerSourceManager(YandexMusicAudioSourceManager(lavaplayerProps.isYandexMusicSearchEnabled))
-      YandexHttpContextFilter.setOAuthToken(lavaplayerProps.yandexOAuthToken)
-    }
-    if (sources.getyarn) audioPlayerManager.registerSourceManager(GetyarnAudioSourceManager())
     if (sources.http) audioPlayerManager.registerSourceManager(HttpAudioSourceManager())
     if (sources.local) audioPlayerManager.registerSourceManager(LocalAudioSourceManager())
 
