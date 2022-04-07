@@ -15,7 +15,7 @@ import xyz.gianlu.librespot.audio.decoders.VorbisOnlyAudioQuality
 import xyz.gianlu.librespot.audio.format.SuperAudioFormat
 import xyz.gianlu.librespot.metadata.PlayableId
 
-class SpotifyAudioTrack(trackInfo: AudioTrackInfo?, private val spotifyAudioSourceManager: SpotifyAudioSourceManager) :
+class SpotifyAudioTrack(trackInfo: AudioTrackInfo, private val spotifyAudioSourceManager: SpotifyAudioSourceManager) :
     DelegatedAudioTrack(trackInfo) {
     private val log = LoggerFactory.getLogger(SpotifyAudioTrack::class.java)
     private var audioQualityPreferred = AudioQuality.valueOf(spotifyAudioSourceManager.audioQuality.uppercase())
@@ -29,7 +29,7 @@ class SpotifyAudioTrack(trackInfo: AudioTrackInfo?, private val spotifyAudioSour
                 } else {
                     "spotify:track:" + trackInfo.identifier
                 }
-            // TODO("Connection timeout issue when trying to playing the track")
+            // Connection timeout issue when trying to playing the track
 //            val metadataTrackOrEpisode =
 //                if (trackInfo.uri.startsWith("https://open.spotify.com/episode")) {
 //                    spotifyAudioSourceManager
@@ -79,7 +79,7 @@ class SpotifyAudioTrack(trackInfo: AudioTrackInfo?, private val spotifyAudioSour
                     true,
                     null
                 )
-            // TODO("seekable spotify")
+            // seekable spotify
             var internalAudioTrack: InternalAudioTrack? = null
             if (loadedStream?.`in`?.codec() == SuperAudioFormat.VORBIS) {
                 internalAudioTrack = OggAudioTrack(trackInfo, NonSeekableInputStream(loadedStream.`in`?.stream()))
@@ -96,7 +96,7 @@ class SpotifyAudioTrack(trackInfo: AudioTrackInfo?, private val spotifyAudioSour
     }
 
     override fun makeShallowClone(): AudioTrack {
-        return SpotifyAudioTrack(this.trackInfo, spotifyAudioSourceManager)
+        return SpotifyAudioTrack(trackInfo, spotifyAudioSourceManager)
     }
 
     override fun getSourceManager(): SpotifyAudioSourceManager {
