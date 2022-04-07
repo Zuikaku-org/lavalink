@@ -36,6 +36,7 @@ class LavaplayerConfigProperties {
   var isOdyseeSearchEnabled = true
   var isSoundcloudSearchEnabled = true
   var isYandexMusicSearchEnabled = true
+  var isSpotifySearchEnabled = true
   var ratelimit: RateLimitConfig? = null
   var youtubeConfig: YoutubeConfig? = null
   var spotifyConfig: SpotifyConfig? = null
