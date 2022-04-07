@@ -39,6 +39,7 @@ lavalink:
       odyseeSearchEnabled: true
       soundcloudSearchEnabled: true
       yandexMusicSearchEnabled: true
+      spotifySearchEnabled: true
       spotifyConfig:
         spotifyUsername: BigWeebs
         spotifyPassword: ShipGirlSimpers
