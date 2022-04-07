@@ -29,7 +29,6 @@ buildscript {
   val springBootVersion = "2.6.5"
   val sonarqubeVersion = "3.3"
   val testLoggerVersion = "3.1.0"
-  val librespotLibVersion = "1.6.2"
 
   repositories {
     mavenLocal()
@@ -45,7 +44,6 @@ buildscript {
     classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     classpath("org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion")
     classpath("com.adarshr:gradle-test-logger-plugin:$testLoggerVersion")
-    classpath("xyz.gianlu.librespot:librespot-lib:$librespotLibVersion")
   }
 }
 
@@ -85,7 +83,7 @@ val lavaplayerVersion = "0db9ab6"
 val lavaplayerIpRotatorVersion = "0.2.3"
 val nettyEpollVersion = "4.1.75.Final:linux-x86_64"
 val lavadspVersion = "0.7.7"
-val librespotLibVersion = "1.6.2"
+val librespotLibVersion = "020ca70"
 
 val springBootVersion = "2.6.5"
 val springWebSocketVersion = "5.3.17"
@@ -125,7 +123,7 @@ dependencies {
   }
 
   // Spotify
-  implementation("xyz.gianlu.librespot:librespot-lib:$librespotLibVersion")
+  implementation("com.github.librespot-org.librespot-java:librespot-lib:$librespotLibVersion")
 
   // Spring
   implementation("org.springframework:spring-websocket:$springWebSocketVersion")
