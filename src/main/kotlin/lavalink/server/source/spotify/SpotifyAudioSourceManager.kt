@@ -2,7 +2,6 @@ package lavalink.server.source.spotify
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioReference
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
@@ -21,19 +20,20 @@ class SpotifyAudioSourceManager(
     private var username: String,
     private var password: String,
     var audioQuality: String,
-    var spotifyPlaylistLoadLimit: Int
+    var spotifyPlaylistLoadLimit: Int,
+    private var allowSearch: Boolean
 ) : AudioSourceManager {
-    private val SEARCH_PREFIX = "spsearch:"
-    val SPOTIFY_REGEX =
+    private val log = LoggerFactory.getLogger(SpotifyAudioSourceManager::class.java)
+
+    private val searchPrefix = "spsearch:"
+    private val spotifyRegex =
         "(?<link>(?:https://open\\.spotify\\.com/(?:user/[A-Za-z0-9]+/)?|spotify:)(?<type>album|playlist|track|artist|episode|show)([/:])(?<identifier>[A-Za-z0-9]+).*\$)"
-    val SPOTIFY_URL_PATTERN = Pattern.compile(SPOTIFY_REGEX)
+    val spotifyPattern: Pattern = Pattern.compile(spotifyRegex)
     val spotifyAPI = "https://api.spotify.com/v1/"
     var spotifySession: Session? = null
 
     val userAgent =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (HTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
-
-    private val log = LoggerFactory.getLogger(SpotifyAudioSourceManager::class.java)
 
     override fun getSourceName(): String {
         return "spotify"
@@ -72,33 +72,33 @@ class SpotifyAudioSourceManager(
         }
     }
 
+
     override fun loadItem(manager: AudioPlayerManager, reference: AudioReference): AudioItem? {
-        if (reference.identifier.startsWith(SEARCH_PREFIX)) {
-            return SpotifySearchResolver(this, reference.identifier.substring(SEARCH_PREFIX.length)).fetch()
+        if (allowSearch && reference.identifier.startsWith(searchPrefix)) {
+            return SpotifySearchResolver(this, reference.identifier.substring(searchPrefix.length)).fetch()
         }
-        val matcher = SPOTIFY_URL_PATTERN.matcher(reference.identifier)
-        if (!matcher.matches()) {
-            throw FriendlyException("Invalid Spotify URL.", FriendlyException.Severity.COMMON, null)
-        }
-        val type = matcher.group("type")
-        val identifier = matcher.group("identifier")
-        if (type == "track") {
-            return SpotifyTrackResolver(this, identifier).fetch()
-        }
-        if (type == "playlist") {
-            return SpotifyPlaylistResolver(this, identifier).fetch()
-        }
-        if (type == "album") {
-            return SpotifyAlbumResolver(this, identifier).fetch()
-        }
-        if (type == "artist") {
-            return SpotifyArtistResolver(this, identifier).fetch()
-        }
-        if (type == "episode") {
-            return SpotifyEpisodeResolver(this, identifier).fetch()
-        }
-        if (type == "show") {
-            return SpotifyShowResolver(this, identifier).fetch()
+        val matcher = spotifyPattern.matcher(reference.identifier)
+        if (matcher.matches()) {
+            val type = matcher.group("type")
+            val identifier = matcher.group("identifier")
+            if (type == "track") {
+                return SpotifyTrackResolver(this, identifier).fetch()
+            }
+            if (type == "playlist") {
+                return SpotifyPlaylistResolver(this, identifier).fetch()
+            }
+            if (type == "album") {
+                return SpotifyAlbumResolver(this, identifier).fetch()
+            }
+            if (type == "artist") {
+                return SpotifyArtistResolver(this, identifier).fetch()
+            }
+            if (type == "episode") {
+                return SpotifyEpisodeResolver(this, identifier).fetch()
+            }
+            if (type == "show") {
+                return SpotifyShowResolver(this, identifier).fetch()
+            }
         }
         return null
     }
@@ -107,7 +107,16 @@ class SpotifyAudioSourceManager(
         return true
     }
 
-    override fun encodeTrack(track: AudioTrack, output: DataOutput) {}
+    @Throws(
+        IOException::class
+    )
+    override fun encodeTrack(track: AudioTrack, output: DataOutput) {
+        // No custom values that need saving
+    }
+
+    @Throws(
+        IOException::class
+    )
     override fun decodeTrack(trackInfo: AudioTrackInfo, input: DataInput): AudioTrack {
         return SpotifyAudioTrack(trackInfo, this)
     }
