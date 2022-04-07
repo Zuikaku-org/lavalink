@@ -1,7 +1,6 @@
 package lavalink.server.source.spotify
 
 import com.google.gson.JsonElement
-import com.google.gson.JsonParser
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity
 import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser
@@ -49,7 +48,8 @@ class SpotifyRestHandler(private val defaultAudioPlayerManager: DefaultAudioPlay
     fun loadSpotifyRecommendations(@RequestParam url: String): ResponseEntity<String> {
         log.info("Got request to load spotify recommendations for identifier: $url")
 
-        val matcher = spotifyAudioSourceManager.SPOTIFY_URL_PATTERN.matcher(url)
+        val matcher = spotifyAudioSourceManager
+            .spotifyPattern.matcher(url)
         if (!matcher.matches()) {
             return ResponseEntity(
                 spotifyRestException("Invalid Spotify URL.", Severity.COMMON).toString(),
@@ -63,25 +63,16 @@ class SpotifyRestHandler(private val defaultAudioPlayerManager: DefaultAudioPlay
             )
         }
         val identifier = matcher.group("identifier")
-        val playableURI =
-            if (identifier.startsWith("https://open.spotify.com/episode")) {
-                "spotify:episode:$identifier"
-            } else {
-                "spotify:track:$identifier"
-            }
+
         try {
-            val resp = spotifyAudioSourceManager.spotifySession?.api()?.send(
-                "GET",
-                "/inspiredby-mix/v2/seed_to_playlist/$playableURI?response-format=json",
-                null,
-                null
-            )
-            val radioMetadata = JsonParser.parseReader(resp?.body?.charStream()).asJsonObject
-            if (radioMetadata["total"].asNumber == 0) {
+            val radioMetadata = spotifyAudioSourceManager
+                .spotifySession?.api()?.getRadioForTrack(PlayableId.fromUri("spotify:track:$identifier"))
+            if (radioMetadata?.get("total")!!.asNumber == 0) {
                 return ResponseEntity(spotifyRestException().toString(), HttpStatus.OK)
             }
-            val playableRadioUri = radioMetadata["mediaItems"].asJsonArray[0].asJsonObject["uri"].asString
-            val matcherPlayableRadioUri = spotifyAudioSourceManager.SPOTIFY_URL_PATTERN.matcher(playableRadioUri)
+            val playableRadioUri = radioMetadata["mediaItems"]?.asJsonArray?.get(0)?.asJsonObject?.get("uri")!!.asString
+            val matcherPlayableRadioUri = spotifyAudioSourceManager
+                .spotifyPattern.matcher(playableRadioUri)
             if (!matcherPlayableRadioUri.matches()) {
                 return ResponseEntity(
                     spotifyRestException("Invalid Spotify URL.", Severity.COMMON).toString(),
