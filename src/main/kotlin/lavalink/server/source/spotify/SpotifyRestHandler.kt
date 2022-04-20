@@ -4,9 +4,6 @@ import com.google.gson.JsonElement
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity
 import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
-import lavalink.server.source.spotify.resolver.SpotifyPlaylistResolver
-import lavalink.server.util.Util
 import okhttp3.Request
 import okio.ByteString.Companion.toByteString
 import org.json.JSONArray
@@ -43,56 +40,9 @@ class SpotifyRestHandler(private val defaultAudioPlayerManager: DefaultAudioPlay
         }
     }
 
-    @GetMapping(value = ["loadspotifyrecommendations"], produces = ["application/json"])
-    @ResponseBody
-    fun loadSpotifyRecommendations(@RequestParam url: String): ResponseEntity<String> {
-        log.info("Got request to load spotify recommendations for identifier: $url")
-
-        val matcher = spotifyAudioSourceManager
-            .spotifyPattern.matcher(url)
-        if (!matcher.matches()) {
-            return ResponseEntity(
-                spotifyRestException("Invalid Spotify URL.", Severity.COMMON).toString(),
-                HttpStatus.OK
-            )
-        }
-        if (!matcher.group("type").equals("track")) {
-            return ResponseEntity(
-                spotifyRestException("Only accept spotify track uri", Severity.COMMON).toString(),
-                HttpStatus.OK
-            )
-        }
-        val identifier = matcher.group("identifier")
-
-        try {
-            val radioMetadata = spotifyAudioSourceManager
-                .spotifySession?.api()?.getRadioForTrack(PlayableId.fromUri("spotify:track:$identifier"))
-            if (radioMetadata?.get("total")!!.asNumber == 0) {
-                return ResponseEntity(spotifyRestException().toString(), HttpStatus.OK)
-            }
-            val playableRadioUri = radioMetadata["mediaItems"]?.asJsonArray?.get(0)?.asJsonObject?.get("uri")!!.asString
-            val matcherPlayableRadioUri = spotifyAudioSourceManager
-                .spotifyPattern.matcher(playableRadioUri)
-            if (!matcherPlayableRadioUri.matches()) {
-                return ResponseEntity(
-                    spotifyRestException("Invalid Spotify URL.", Severity.COMMON).toString(),
-                    HttpStatus.OK
-                )
-            }
-            val playableRadioIdentifier = matcherPlayableRadioUri.group("identifier")
-            val requestSpotifyPlaylist =
-                SpotifyPlaylistResolver(spotifyAudioSourceManager, playableRadioIdentifier).fetch()
-            return ResponseEntity(spotifyRecommendationsData(requestSpotifyPlaylist).toString(), HttpStatus.OK)
-        } catch (e: Exception) {
-            return ResponseEntity(spotifyRestException(e.message, Severity.COMMON).toString(), HttpStatus.OK)
-        } finally {
-            log.info("Loaded spotify recommendations for identifier: $url")
-        }
-    }
-
     private fun spotifyRestException(
         message: String? = "Spotify Rest got an exception",
-        severity: Severity? = Severity.COMMON
+        severity: Severity? = Severity.SUSPICIOUS
     ): JSONObject {
         val json = JSONObject()
         val playlist = JSONObject()
@@ -129,49 +79,6 @@ class SpotifyRestHandler(private val defaultAudioPlayerManager: DefaultAudioPlay
             .put("imageUrl", imageUrl ?: JSONObject.NULL)
             .put("language", language ?: JSONObject.NULL)
             .put("lyrics", lyrics)
-    }
-
-    private fun spotifyRecommendationsData(result: AudioPlaylist): JSONObject {
-        val json = JSONObject()
-        val playlist = JSONObject()
-        val tracks = JSONArray()
-
-        playlist
-            .put("name", result.name)
-            .put("selectedTrack", result.selectedTrack ?: -1)
-
-        result.tracks.forEach {
-            val track = JSONObject()
-            val trackInfo = JSONObject()
-
-            trackInfo
-                .put("identifier", it.info.identifier)
-                .put("thumbnail", it.info.artworkUrl)
-                .put("isSeekable", it.isSeekable)
-                .put("author", it.info.author)
-                .put("length", it.info.length)
-                .put("isStream", it.info.isStream)
-                .put("sourceName", spotifyAudioSourceManager.sourceName)
-                .put("position", it.position)
-                .put("title", it.info.title)
-                .put("uri", it.info.uri)
-
-            val encoded = Util.encodeAudioTrack(defaultAudioPlayerManager, it)
-
-            track
-                .put("track", encoded)
-                .put("info", trackInfo)
-
-            tracks
-                .put(track)
-        }
-
-        json
-            .put("playlistInfo", playlist)
-            .put("loadType", "PLAYLIST_LOADED")
-            .put("tracks", tracks)
-
-        return json
     }
 
     private fun searchTrack(query: String): JsonElement? {

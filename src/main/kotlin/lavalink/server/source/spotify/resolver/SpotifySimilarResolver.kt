@@ -2,10 +2,7 @@ package lavalink.server.source.spotify.resolver
 
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo
-import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist
+import com.sedmelluq.discord.lavaplayer.track.*
 import lavalink.server.source.spotify.SpotifyAudioSourceManager
 import lavalink.server.source.spotify.SpotifyAudioTrack
 import okhttp3.Request
@@ -14,16 +11,27 @@ import xyz.gianlu.librespot.metadata.PlayableId
 import xyz.gianlu.librespot.metadata.TrackId
 import java.net.URI
 
-class SpotifyPlaylistResolver(
+class SpotifySimilarResolver(
     private val spotifyAudioSourceManager: SpotifyAudioSourceManager,
     private val identifier: String
 ) {
-    fun fetch(): AudioPlaylist {
+    fun fetch(): AudioItem {
         try {
+            val similarMetadata = spotifyAudioSourceManager.spotifySession?.api()
+                ?.getRadioForTrack(PlayableId.fromUri("spotify:track:$identifier"))
+            if (similarMetadata?.get("total")!!.asNumber == 0) {
+                return AudioReference.NO_TRACK
+            }
+            val similarUri = similarMetadata["mediaItems"]?.asJsonArray?.get(0)?.asJsonObject?.get("uri")!!.asString
+            val playableSimilarUri = spotifyAudioSourceManager.spotifyPattern.matcher(similarUri)
+            if (!playableSimilarUri.matches()) {
+                return AudioReference.NO_TRACK
+            }
+            val playableSimilarIdentifier = playableSimilarUri.group("identifier")
             val uriRequest = URI.create(
                 spotifyAudioSourceManager.spotifyAPI
                         + "playlists/"
-                        + identifier
+                        + playableSimilarIdentifier
             ).toString()
             val request = Request
                 .Builder()
@@ -41,7 +49,7 @@ class SpotifyPlaylistResolver(
             if (response?.code != 200) {
                 throw FriendlyException(
                     "Spotify API returned ${response?.code}.",
-                    FriendlyException.Severity.SUSPICIOUS,
+                    FriendlyException.Severity.COMMON,
                     null
                 )
             }

@@ -2,6 +2,7 @@ package lavalink.server.source.spotify
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 import com.sedmelluq.discord.lavaplayer.track.AudioReference
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
@@ -26,6 +27,7 @@ class SpotifyAudioSourceManager(
     private val log = LoggerFactory.getLogger(SpotifyAudioSourceManager::class.java)
 
     private val searchPrefix = "spsearch:"
+    private val similarPrefix = "spsimilar:"
     private val spotifyRegex =
         "(?<link>(?:https://open\\.spotify\\.com/(?:user/[A-Za-z0-9]+/)?|spotify:)(?<type>album|playlist|track|artist|episode|show)([/:])(?<identifier>[A-Za-z0-9]+).*\$)"
     val spotifyPattern: Pattern = Pattern.compile(spotifyRegex)
@@ -77,10 +79,22 @@ class SpotifyAudioSourceManager(
         if (allowSearch && reference.identifier.startsWith(searchPrefix)) {
             return SpotifySearchResolver(this, reference.identifier.substring(searchPrefix.length)).fetch()
         }
-        val matcher = spotifyPattern.matcher(reference.identifier)
+        val matcher = spotifyPattern.matcher(
+            if (reference.identifier.startsWith(similarPrefix)) {
+                reference.identifier.substring(similarPrefix.length)
+            } else {
+                reference.identifier
+            }
+        )
         if (matcher.matches()) {
             val type = matcher.group("type")
             val identifier = matcher.group("identifier")
+            if (allowSearch && reference.identifier.startsWith(similarPrefix)) {
+                if (!type.equals("track")) {
+                    throw FriendlyException("Only accept spotify track uri", FriendlyException.Severity.COMMON, null)
+                }
+                return SpotifySimilarResolver(this, identifier).fetch()
+            }
             if (type == "track") {
                 return SpotifyTrackResolver(this, identifier).fetch()
             }
