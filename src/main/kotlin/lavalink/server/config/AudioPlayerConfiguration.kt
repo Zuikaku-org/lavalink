@@ -126,11 +126,9 @@ class AudioPlayerConfiguration {
         audioPlayerManager
           .registerSourceManager(
             SpotifyAudioSourceManager(
-              lavaplayerProps.spotifyConfig!!.spotifyUsername!!,
-              lavaplayerProps.spotifyConfig!!.spotifyPassword!!,
-              lavaplayerProps.spotifyConfig!!.audioQuality!!,
-              lavaplayerProps.spotifyPlaylistLoadLimit!!,
-              lavaplayerProps.isSpotifySearchEnabled
+                lavaplayerProps.spotifyConfig,
+                lavaplayerProps.spotifyPlaylistLoadLimit!!,
+                lavaplayerProps.isSpotifySearchEnabled,
             )
           )
       }

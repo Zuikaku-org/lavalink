@@ -44,6 +44,13 @@ lavalink:
         spotifyUsername: BigWeebs
         spotifyPassword: ShipGirlSimpers
         audioQuality: HIGH
+        proxy:
+          useProxy: true
+          proxyAddress: 127.0.0.1
+          proxyPort: 8080
+          proxyUsername: yourproxyusername
+          proxyPassword: yourproxypassword
+          proxyType: direct
       #youtubeConfig: (Youtube account credentials, needed to play age restricted tracks)
         #email: ""
         #password: ""

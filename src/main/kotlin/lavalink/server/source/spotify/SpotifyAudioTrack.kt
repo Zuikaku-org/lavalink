@@ -18,7 +18,8 @@ import xyz.gianlu.librespot.metadata.PlayableId
 class SpotifyAudioTrack(trackInfo: AudioTrackInfo, private val spotifyAudioSourceManager: SpotifyAudioSourceManager) :
     DelegatedAudioTrack(trackInfo) {
     private val log = LoggerFactory.getLogger(SpotifyAudioTrack::class.java)
-    private var audioQualityPreferred = AudioQuality.valueOf(spotifyAudioSourceManager.audioQuality.uppercase())
+    private var audioQualityPreferred =
+        AudioQuality.valueOf(spotifyAudioSourceManager.spotifyConfig?.audioQuality?.uppercase()!!)
 
     @Throws(Exception::class)
     override fun process(executor: LocalAudioTrackExecutor) {
