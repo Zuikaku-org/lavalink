@@ -15,6 +15,7 @@ import java.io.DataInput
 import java.io.DataOutput
 import java.io.File
 import java.io.IOException
+import java.lang.Thread.sleep
 import java.net.Proxy
 import java.util.regex.Pattern
 
@@ -36,8 +37,7 @@ class SpotifyAudioSourceManager(
     val userAgent =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (HTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
 
-    private lateinit var thread: Thread
-    private val useCredentials = File("credentials.json").exists()
+    private val hasCredentials = File("credentials.json").exists()
 
     override fun getSourceName(): String {
         return "spotify"
@@ -45,53 +45,49 @@ class SpotifyAudioSourceManager(
 
     init {
         createSpotifySession()
-        thread.isDaemon = true
-        thread.start()
     }
 
     private fun createSpotifySession() {
-        thread = Thread {
-            spotifySession = null
-            try {
-                val spotifySessionConfiguration = Session.Configuration
-                    .Builder()
-                    .setRetryOnChunkError(true)
-                    .setCacheEnabled(false)
-                    .setStoreCredentials(true)
-                if (spotifyConfig?.proxy?.useProxy == true) {
+        spotifySession = null
+        try {
+            val spotifySessionConfiguration = Session.Configuration
+                .Builder()
+                .setRetryOnChunkError(true)
+                .setCacheEnabled(false)
+                .setStoreCredentials(true)
+            if (spotifyConfig?.proxy?.useProxy == true) {
+                spotifySessionConfiguration
+                    .setProxyEnabled(true)
+                    .setProxyAddress(spotifyConfig?.proxy?.proxyAddress)
+                    .setProxyPort(spotifyConfig?.proxy?.proxyPort as Int)
+                if (!spotifyConfig?.proxy?.proxyUsername.isNullOrEmpty()) {
                     spotifySessionConfiguration
-                        .setProxyEnabled(true)
-                        .setProxyAddress(spotifyConfig?.proxy?.proxyAddress)
-                        .setProxyPort(spotifyConfig?.proxy?.proxyPort as Int)
-                    if (!spotifyConfig?.proxy?.proxyUsername.isNullOrEmpty()) {
-                        spotifySessionConfiguration
-                            .setProxyAuth(true)
-                            .setProxyUsername(spotifyConfig?.proxy?.proxyUsername)
-                            .setProxyPassword(spotifyConfig?.proxy?.proxyPassword)
-                    }
-                    spotifySessionConfiguration
-                        .setProxyType(spotifyConfig?.proxy?.proxyType?.let { Proxy.Type.valueOf(it.uppercase()) })
+                        .setProxyAuth(true)
+                        .setProxyUsername(spotifyConfig?.proxy?.proxyUsername)
+                        .setProxyPassword(spotifyConfig?.proxy?.proxyPassword)
                 }
-                val buildSpotifyConfiguration = spotifySessionConfiguration.build()
-                val buildSpotifySession: Session.Builder = Session.Builder(buildSpotifyConfiguration)
-                if (useCredentials) {
-                    log.info("Authenticates with stored credentials")
-                    buildSpotifySession.stored()
-                } else {
-                    log.info("Authenticates with username and password")
-                    buildSpotifySession.userPass(spotifyConfig?.spotifyUsername!!, spotifyConfig?.spotifyPassword!!)
-                }
-                spotifySession = buildSpotifySession.create()
-                spotifySession?.addCloseListener {
-                    log.info("Session closed, trying to connect again in 10 seconds")
-                    Thread.sleep(10000)
-                    createSpotifySession()
-                }
-            } catch (e: Exception) {
-                log.info("Failed to create spotify session, trying to connect again in 10 seconds")
-                Thread.sleep(10000)
+                spotifySessionConfiguration
+                    .setProxyType(spotifyConfig?.proxy?.proxyType?.let { Proxy.Type.valueOf(it.uppercase()) })
+            }
+            val buildSpotifyConfiguration = spotifySessionConfiguration.build()
+            val buildSpotifySession: Session.Builder = Session.Builder(buildSpotifyConfiguration)
+            if (hasCredentials) {
+                log.info("Authenticates with stored credentials")
+                buildSpotifySession.stored()
+            } else {
+                log.info("Authenticates with username and password")
+                buildSpotifySession.userPass(spotifyConfig?.spotifyUsername!!, spotifyConfig?.spotifyPassword!!)
+            }
+            spotifySession = buildSpotifySession.create()
+            spotifySession?.addCloseListener {
+                log.info("Session closed, trying to connect again in 10 seconds")
+                sleep(10000)
                 createSpotifySession()
             }
+        } catch (e: Exception) {
+            log.info("Failed to create spotify session, trying to connect again in 10 seconds")
+            sleep(10000)
+            createSpotifySession()
         }
     }
 
@@ -158,7 +154,6 @@ class SpotifyAudioSourceManager(
 
     override fun shutdown() {
         try {
-            thread.interrupt()
             spotifySession?.close()
         } catch (e: Exception) {
             log.error("Error while closing Spotify session", e)
