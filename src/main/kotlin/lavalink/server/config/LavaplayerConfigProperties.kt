@@ -29,18 +29,18 @@ import org.springframework.stereotype.Component
 @ConfigurationProperties(prefix = "lavalink.server.lavaplayer")
 @Component
 class LavaplayerConfigProperties {
-  var youtubePlaylistLoadLimit: Int? = null
-  var spotifyPlaylistLoadLimit: Int? = null
-  var isGcWarnings = true
-  var isYoutubeSearchEnabled = true
-  var isOdyseeSearchEnabled = true
-  var isSoundcloudSearchEnabled = true
-  var isYandexMusicSearchEnabled = true
-  var isSpotifySearchEnabled = true
-  var ratelimit: RateLimitConfig? = null
-  var youtubeConfig: YoutubeConfig? = null
-  var spotifyConfig: SpotifyConfig? = null
-  var yandexOAuthToken: String? = null
-  var nonAllocating: Boolean = false
-  var frameBufferDuration: Int = 5000
+    var youtubePlaylistLoadLimit: Int? = null
+    var spotifyPlaylistLoadLimit: Int? = null
+    var isGcWarnings = true
+    var isYoutubeSearchEnabled = true
+    var isOdyseeSearchEnabled = true
+    var isSoundcloudSearchEnabled = true
+    var isYandexMusicSearchEnabled = true
+    var isSpotifySearchEnabled = true
+    var ratelimit: RateLimitConfig? = null
+    var youtubeConfig: YoutubeConfig? = null
+    var spotifyConfig: SpotifyConfig? = null
+    var yandexOAuthToken: String? = null
+    var nonAllocating: Boolean = false
+    var frameBufferDuration: Int = 5000
 }

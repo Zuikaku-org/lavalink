@@ -44,162 +44,162 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 class Player(
-  val socketContext: SocketContext,
-  val guildId: String,
-  audioPlayerManager: AudioPlayerManager,
-  private val serverConfig: ServerConfig
+    val socketContext: SocketContext,
+    val guildId: String,
+    audioPlayerManager: AudioPlayerManager,
+    private val serverConfig: ServerConfig
 ) : AudioEventAdapter() {
-  private val player = audioPlayerManager.createPlayer()
-  val audioLossCounter = AudioLossCounter()
-  var realPosition: Double? = null
+    private val player = audioPlayerManager.createPlayer()
+    val audioLossCounter = AudioLossCounter()
+    var realPosition: Double? = null
 
-  /**
-   * The player update interval.
-   */
-  private val interval: Int
-  get() = serverConfig.playerUpdateInterval
-
-  /**
-   * The current audio track that is playing.
-   */
-  val playingTrack: AudioTrack?
-  get() = player.playingTrack
-
-  /**
-   * Whether this player is playing something.
-   */
-  val isPlaying: Boolean
-  get() = player.playingTrack != null && !player.isPaused
-
-  private var myFuture: ScheduledFuture<*>? = null
-
-  var filters: FilterChain? = null
-    set(value) {
-      field = value
-
-      if (value!!.isEnabled) {
-        player.setFilterFactory(value)
-      } else {
-        player.setFilterFactory(null)
-      }
-    }
-
-
-  init {
-    player.addListener(this)
-    player.addListener(EventEmitter(audioPlayerManager, this))
-    player.addListener(audioLossCounter)
-  }
-
-  fun getState(): JSONObject {
-    val json = JSONObject()
-
-    if (player.playingTrack != null)
-      json.put("position", realPosition!!.toLong())
-    json.put("time", System.currentTimeMillis())
-
-    return json
-  }
-
-  /**
-   * Destroys the AudioPlayer
-   */
-  fun destroy() = player.destroy()
-
-  /**
-   * Sets the pause state.
-   * @param state The pause state.
-   */
-  fun setPause(state: Boolean) {
-    player.isPaused = state
-  }
-
-  /**
-   * Sets the volume of this player.
-   * @param volume The volume to use.
-   */
-  fun setVolume(volume: Int) {
-    player.volume = volume
-  }
-
-  /**
-   * Plays an audio track.
-   * @param track The track to play.
-   */
-  fun play(track: AudioTrack) {
-    player.playTrack(track)
-    SocketServer.sendPlayerUpdate(socketContext, this)
-  }
-
-  /**
-   * Stops the currently playing track.
-   */
-  fun stop() = player.stopTrack()
-
-  /**
-   * Seek to the specified position in the current playing song.
-   * @param position The position to seek to.
-   */
-  fun seekTo(position: Long) {
-    val track = playingTrack ?: throw RuntimeException("Can't seek when not playing anything")
-
-    track.position = position
-    realPosition = position.toDouble()
-  }
-
-  override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
-    myFuture?.cancel(false)
-  }
-
-  override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
-    realPosition = track.position.toDouble()
-
-    if (myFuture == null || myFuture!!.isCancelled) {
-      myFuture = socketContext.playerUpdateService.scheduleAtFixedRate(Runnable {
-        if (socketContext.sessionPaused) return@Runnable
-
-        SocketServer.sendPlayerUpdate(socketContext, this)
-      }, 0, this.interval.toLong(), TimeUnit.SECONDS)
-    }
-  }
-
-  fun provideTo(connection: MediaConnection) {
-    connection.audioSender = Provider(connection)
-  }
-
-  inner class Provider(
-    connection: MediaConnection
-  ) : OpusAudioFrameProvider(connection) {
     /**
-     * The last frame that was sent.
+     * The player update interval.
      */
-    private val lastFrame = MutableAudioFrame()
+    private val interval: Int
+        get() = serverConfig.playerUpdateInterval
+
+    /**
+     * The current audio track that is playing.
+     */
+    val playingTrack: AudioTrack?
+        get() = player.playingTrack
+
+    /**
+     * Whether this player is playing something.
+     */
+    val isPlaying: Boolean
+        get() = player.playingTrack != null && !player.isPaused
+
+    private var myFuture: ScheduledFuture<*>? = null
+
+    var filters: FilterChain? = null
+        set(value) {
+            field = value
+
+            if (value!!.isEnabled) {
+                player.setFilterFactory(value)
+            } else {
+                player.setFilterFactory(null)
+            }
+        }
+
 
     init {
-      lastFrame.setBuffer(ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize()))
+        player.addListener(this)
+        player.addListener(EventEmitter(audioPlayerManager, this))
+        player.addListener(audioLossCounter)
     }
 
-    override fun canProvide(): Boolean {
-      val sent = player.provide(lastFrame)
+    fun getState(): JSONObject {
+        val json = JSONObject()
 
-      if (sent) {
-        audioLossCounter.onSuccess()
+        if (player.playingTrack != null)
+            json.put("position", realPosition!!.toLong())
+        json.put("time", System.currentTimeMillis())
 
-        val speed = filters?.timescale?.speed ?: 1.0f
-        val rate = filters?.timescale?.rate ?: 1.0f
-
-        realPosition = realPosition?.plus(20 * speed * rate)
-      } else {
-        audioLossCounter.onLoss()
-      }
-
-      return sent
+        return json
     }
 
-    @Override
-    override fun retrieveOpusFrame(buf: ByteBuf) {
-      buf.writeBytes(lastFrame.data)
+    /**
+     * Destroys the AudioPlayer
+     */
+    fun destroy() = player.destroy()
+
+    /**
+     * Sets the pause state.
+     * @param state The pause state.
+     */
+    fun setPause(state: Boolean) {
+        player.isPaused = state
     }
-  }
+
+    /**
+     * Sets the volume of this player.
+     * @param volume The volume to use.
+     */
+    fun setVolume(volume: Int) {
+        player.volume = volume
+    }
+
+    /**
+     * Plays an audio track.
+     * @param track The track to play.
+     */
+    fun play(track: AudioTrack) {
+        player.playTrack(track)
+        SocketServer.sendPlayerUpdate(socketContext, this)
+    }
+
+    /**
+     * Stops the currently playing track.
+     */
+    fun stop() = player.stopTrack()
+
+    /**
+     * Seek to the specified position in the current playing song.
+     * @param position The position to seek to.
+     */
+    fun seekTo(position: Long) {
+        val track = playingTrack ?: throw RuntimeException("Can't seek when not playing anything")
+
+        track.position = position
+        realPosition = position.toDouble()
+    }
+
+    override fun onTrackEnd(player: AudioPlayer, track: AudioTrack, endReason: AudioTrackEndReason) {
+        myFuture?.cancel(false)
+    }
+
+    override fun onTrackStart(player: AudioPlayer, track: AudioTrack) {
+        realPosition = track.position.toDouble()
+
+        if (myFuture == null || myFuture!!.isCancelled) {
+            myFuture = socketContext.playerUpdateService.scheduleAtFixedRate(Runnable {
+                if (socketContext.sessionPaused) return@Runnable
+
+                SocketServer.sendPlayerUpdate(socketContext, this)
+            }, 0, this.interval.toLong(), TimeUnit.SECONDS)
+        }
+    }
+
+    fun provideTo(connection: MediaConnection) {
+        connection.audioSender = Provider(connection)
+    }
+
+    inner class Provider(
+        connection: MediaConnection
+    ) : OpusAudioFrameProvider(connection) {
+        /**
+         * The last frame that was sent.
+         */
+        private val lastFrame = MutableAudioFrame()
+
+        init {
+            lastFrame.setBuffer(ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize()))
+        }
+
+        override fun canProvide(): Boolean {
+            val sent = player.provide(lastFrame)
+
+            if (sent) {
+                audioLossCounter.onSuccess()
+
+                val speed = filters?.timescale?.speed ?: 1.0f
+                val rate = filters?.timescale?.rate ?: 1.0f
+
+                realPosition = realPosition?.plus(20 * speed * rate)
+            } else {
+                audioLossCounter.onLoss()
+            }
+
+            return sent
+        }
+
+        @Override
+        override fun retrieveOpusFrame(buf: ByteBuf) {
+            buf.writeBytes(lastFrame.data)
+        }
+    }
 
 }

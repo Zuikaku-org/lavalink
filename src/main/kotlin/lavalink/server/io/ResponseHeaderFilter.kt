@@ -32,13 +32,13 @@ import javax.servlet.http.HttpServletResponse
 
 @Component
 class ResponseHeaderFilter : OncePerRequestFilter() {
-  override fun doFilterInternal(
-    request: HttpServletRequest,
-    response: HttpServletResponse,
-    filterChain: FilterChain
-  ) {
-    response.addHeader("Lavalink-Api-Version", "3")
-    response.addHeader("Lavalink-Version", "davidffa/lavalink")
-    filterChain.doFilter(request, response)
-  }
+    override fun doFilterInternal(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        filterChain: FilterChain
+    ) {
+        response.addHeader("Lavalink-Api-Version", "3")
+        response.addHeader("Lavalink-Version", "davidffa/lavalink")
+        filterChain.doFilter(request, response)
+    }
 }

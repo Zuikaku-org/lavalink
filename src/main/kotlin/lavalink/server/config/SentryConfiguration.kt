@@ -32,8 +32,7 @@ import lavalink.server.Launcher
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
-
-import java.util.Properties
+import java.util.*
 
 /**
  * Created by napster on 25.04.18.
@@ -42,81 +41,81 @@ import java.util.Properties
 
 @Configuration
 class SentryConfiguration(
-  sentryConfig: SentryConfigProperties
+    sentryConfig: SentryConfigProperties
 ) {
-  private val log = LoggerFactory.getLogger(SentryConfiguration::class.java)
-  private val SENTRY_APPENDER_NAME = "SENTRY"
+    private val log = LoggerFactory.getLogger(SentryConfiguration::class.java)
+    private val SENTRY_APPENDER_NAME = "SENTRY"
 
-  init {
-    val dsn = sentryConfig.dsn
+    init {
+        val dsn = sentryConfig.dsn
 
-    if (dsn.isNotEmpty()) {
-      turnOn(dsn, sentryConfig.tags, sentryConfig.environment)
-    } else {
-      turnOff()
-    }
-  }
-
-  //programmatically creates a sentry appender
-  @Synchronized
-  private fun getSentryLogbackAppender(): SentryAppender {
-    val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
-    val root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME)
-
-    var sentryAppender = root.getAppender(SENTRY_APPENDER_NAME) as SentryAppender?
-    if (sentryAppender == null) {
-      sentryAppender = SentryAppender()
-      sentryAppender.name = SENTRY_APPENDER_NAME
-
-      val warningsOrAboveFilter = ThresholdFilter()
-      warningsOrAboveFilter.setLevel(Level.WARN.levelStr)
-      warningsOrAboveFilter.start()
-      sentryAppender.addFilter(warningsOrAboveFilter)
-
-      sentryAppender.context = loggerContext
-      root.addAppender(sentryAppender)
-    }
-    return sentryAppender
-  }
-
-  private fun turnOn(dsn: String, tags: Map<String, String>?, environment: String) {
-    log.info("Turning on sentry")
-
-    Sentry.init {
-      it.dsn = dsn
-
-      if (environment.isNotBlank()) {
-        it.environment = environment
-      }
-
-      if (tags != null && tags.isNotEmpty()) {
-        tags.forEach(it::setTag)
-      }
-
-      // set the git commit hash this was build on as the release
-      val gitProps = Properties()
-      try {
-        gitProps.load(Launcher::class.java.classLoader.getResourceAsStream("git.properties"))
-      } catch (e: Exception) {
-        log.error("Failed to load git repo information", e)
-      }
-
-      val commitHash = gitProps.getProperty("git.commit.id")
-      if (commitHash != null && commitHash.isNotEmpty()) {
-        log.info("Setting sentry release to commit hash {}", commitHash)
-        it.release = commitHash
-      } else {
-        log.warn("No git commit hash found to set up sentry release")
-      }
+        if (dsn.isNotEmpty()) {
+            turnOn(dsn, sentryConfig.tags, sentryConfig.environment)
+        } else {
+            turnOff()
+        }
     }
 
-    getSentryLogbackAppender().start()
-  }
+    //programmatically creates a sentry appender
+    @Synchronized
+    private fun getSentryLogbackAppender(): SentryAppender {
+        val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+        val root = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME)
 
-  private fun turnOff() {
-    log.warn("Turning off sentry")
-    Sentry.close()
-    getSentryLogbackAppender().stop()
-  }
+        var sentryAppender = root.getAppender(SENTRY_APPENDER_NAME) as SentryAppender?
+        if (sentryAppender == null) {
+            sentryAppender = SentryAppender()
+            sentryAppender.name = SENTRY_APPENDER_NAME
+
+            val warningsOrAboveFilter = ThresholdFilter()
+            warningsOrAboveFilter.setLevel(Level.WARN.levelStr)
+            warningsOrAboveFilter.start()
+            sentryAppender.addFilter(warningsOrAboveFilter)
+
+            sentryAppender.context = loggerContext
+            root.addAppender(sentryAppender)
+        }
+        return sentryAppender
+    }
+
+    private fun turnOn(dsn: String, tags: Map<String, String>?, environment: String) {
+        log.info("Turning on sentry")
+
+        Sentry.init {
+            it.dsn = dsn
+
+            if (environment.isNotBlank()) {
+                it.environment = environment
+            }
+
+            if (tags != null && tags.isNotEmpty()) {
+                tags.forEach(it::setTag)
+            }
+
+            // set the git commit hash this was build on as the release
+            val gitProps = Properties()
+            try {
+                gitProps.load(Launcher::class.java.classLoader.getResourceAsStream("git.properties"))
+            } catch (e: Exception) {
+                log.error("Failed to load git repo information", e)
+            }
+
+            val commitHash = gitProps.getProperty("git.commit.id")
+            if (commitHash != null && commitHash.isNotEmpty()) {
+                log.info("Setting sentry release to commit hash {}", commitHash)
+                it.release = commitHash
+            } else {
+                log.warn("No git commit hash found to set up sentry release")
+            }
+        }
+
+        getSentryLogbackAppender().start()
+    }
+
+    private fun turnOff() {
+        log.warn("Turning off sentry")
+        Sentry.close()
+        getSentryLogbackAppender().stop()
+    }
 
 }

@@ -24,8 +24,6 @@
 package lavalink.server
 
 import com.sedmelluq.discord.lavaplayer.tools.PlayerLibrary
-import lavalink.server.info.AppInfo
-import lavalink.server.info.GitRepoState
 import org.slf4j.LoggerFactory
 import org.springframework.boot.Banner
 import org.springframework.boot.SpringApplication
@@ -34,77 +32,74 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent
 import org.springframework.boot.context.event.ApplicationFailedEvent
 import org.springframework.context.ApplicationListener
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @SpringBootApplication
 class LavalinkApplication
 
 object Launcher {
 
-  private val log = LoggerFactory.getLogger(Launcher::class.java)
+    private val log = LoggerFactory.getLogger(Launcher::class.java)
 
-  val startTime = System.currentTimeMillis()
+    val startTime = System.currentTimeMillis()
 
-  private fun getVersionInfo(indentation: String = "\t", vanity: Boolean = true): String {
-    val version = "CUSTOM"
-    val buildNumber = "Unofficial"
+    private fun getVersionInfo(indentation: String = "\t", vanity: Boolean = true): String {
+        val version = "CUSTOM"
+        val buildNumber = "Unofficial"
 
-    return buildString {
-      if (vanity) {
-        appendLine()
-        appendLine()
-        appendLine(getVanity())
-      }
+        return buildString {
+            if (vanity) {
+                appendLine()
+                appendLine()
+                appendLine(getVanity())
+            }
 
-      appendLine()
-      append("${indentation}Version:        "); appendLine(version)
-      append("${indentation}Build:          "); appendLine(buildNumber)
-      append("${indentation}Kotlin:         "); appendLine(KotlinVersion.CURRENT)
-      append("${indentation}JVM:            "); appendLine(System.getProperty("java.version"))
-      append("${indentation}Lavaplayer:     "); appendLine(PlayerLibrary.VERSION)
-    }
-  }
-
-  private fun getVanity(): String {
-    //ansi color codes
-    val red = "[31m"
-    val green = "[32m"
-    val defaultC = "[0m"
-
-    var vanity = ("g       .  r _                  _ _       _    g__ _ _\n"
-      + "g      /\\\\ r| | __ ___   ____ _| (_)_ __ | | __g\\ \\ \\ \\\n"
-      + "g     ( ( )r| |/ _` \\ \\ / / _` | | | '_ \\| |/ /g \\ \\ \\ \\\n"
-      + "g      \\\\/ r| | (_| |\\ V / (_| | | | | | |   < g  ) ) ) )\n"
-      + "g       '  r|_|\\__,_| \\_/ \\__,_|_|_|_| |_|_|\\_\\g / / / /\n"
-      + "d    =========================================g/_/_/_/d")
-
-    vanity = vanity.replace("r".toRegex(), red)
-    vanity = vanity.replace("g".toRegex(), green)
-    vanity = vanity.replace("d".toRegex(), defaultC)
-    return vanity
-  }
-
-  @JvmStatic
-  fun main(args: Array<String>) {
-    when (args.firstOrNull()?.lowercase()) {
-      "-v", "--version" -> return println(getVersionInfo(indentation = "", vanity = false))
-    }
-
-    /* start the spring application */
-    val sa = SpringApplication(LavalinkApplication::class.java)
-    sa.webApplicationType = WebApplicationType.SERVLET
-    sa.setBannerMode(Banner.Mode.OFF) // We have our own
-    sa.addListeners(
-      ApplicationListener { event: Any ->
-        when (event) {
-          is ApplicationEnvironmentPreparedEvent -> log.info(getVersionInfo())
-          is ApplicationFailedEvent -> log.error("Application failed", event.exception)
+            appendLine()
+            append("${indentation}Version:        "); appendLine(version)
+            append("${indentation}Build:          "); appendLine(buildNumber)
+            append("${indentation}Kotlin:         "); appendLine(KotlinVersion.CURRENT)
+            append("${indentation}JVM:            "); appendLine(System.getProperty("java.version"))
+            append("${indentation}Lavaplayer:     "); appendLine(PlayerLibrary.VERSION)
         }
-      }
-    )
+    }
 
-    sa.run(*args)
-  }
+    private fun getVanity(): String {
+        //ansi color codes
+        val red = "[31m"
+        val green = "[32m"
+        val defaultC = "[0m"
+
+        var vanity = ("g       .  r _                  _ _       _    g__ _ _\n"
+                + "g      /\\\\ r| | __ ___   ____ _| (_)_ __ | | __g\\ \\ \\ \\\n"
+                + "g     ( ( )r| |/ _` \\ \\ / / _` | | | '_ \\| |/ /g \\ \\ \\ \\\n"
+                + "g      \\\\/ r| | (_| |\\ V / (_| | | | | | |   < g  ) ) ) )\n"
+                + "g       '  r|_|\\__,_| \\_/ \\__,_|_|_|_| |_|_|\\_\\g / / / /\n"
+                + "d    =========================================g/_/_/_/d")
+
+        vanity = vanity.replace("r".toRegex(), red)
+        vanity = vanity.replace("g".toRegex(), green)
+        vanity = vanity.replace("d".toRegex(), defaultC)
+        return vanity
+    }
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+        when (args.firstOrNull()?.lowercase()) {
+            "-v", "--version" -> return println(getVersionInfo(indentation = "", vanity = false))
+        }
+
+        /* start the spring application */
+        val sa = SpringApplication(LavalinkApplication::class.java)
+        sa.webApplicationType = WebApplicationType.SERVLET
+        sa.setBannerMode(Banner.Mode.OFF) // We have our own
+        sa.addListeners(
+            ApplicationListener { event: Any ->
+                when (event) {
+                    is ApplicationEnvironmentPreparedEvent -> log.info(getVersionInfo())
+                    is ApplicationFailedEvent -> log.error("Application failed", event.exception)
+                }
+            }
+        )
+
+        sa.run(*args)
+    }
 }

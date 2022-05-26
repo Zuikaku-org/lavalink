@@ -31,81 +31,80 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import org.apache.commons.codec.binary.Base64
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import kotlin.jvm.Throws
 
 object Util {
-  private var TIMESCALE_ENABLED: Boolean? = null
+    private var TIMESCALE_ENABLED: Boolean? = null
 
-  fun isTimescaleLoaded(): Boolean {
-    if (TIMESCALE_ENABLED != null) {
-      return TIMESCALE_ENABLED!!
+    fun isTimescaleLoaded(): Boolean {
+        if (TIMESCALE_ENABLED != null) {
+            return TIMESCALE_ENABLED!!
+        }
+
+        TIMESCALE_ENABLED = try {
+            TimescaleNativeLibLoader.loadTimescaleLibrary()
+            true
+        } catch (e: Throwable) {
+            false
+        }
+
+        return TIMESCALE_ENABLED!!
     }
 
-    TIMESCALE_ENABLED = try {
-      TimescaleNativeLibLoader.loadTimescaleLibrary()
-      true
-    } catch (e: Throwable) {
-      false
+    /**
+     * Decodes the supplied [message] into an [AudioTrack].
+     *
+     * @param apm The audio player manager
+     * @param message The base64 encoded audio track
+     */
+    @JvmStatic
+    fun decodeAudioTrack(apm: AudioPlayerManager, message: String): AudioTrack {
+        val base64 = Base64.decodeBase64(message)
+        return ByteArrayInputStream(base64) {
+            val input = MessageInput(this)
+            apm.decodeTrack(input).decodedTrack
+        }
     }
 
-    return TIMESCALE_ENABLED!!
-  }
-
-  /**
-   * Decodes the supplied [message] into an [AudioTrack].
-   *
-   * @param apm The audio player manager
-   * @param message The base64 encoded audio track
-   */
-  @JvmStatic
-  fun decodeAudioTrack(apm: AudioPlayerManager, message: String): AudioTrack {
-    val base64 = Base64.decodeBase64(message)
-    return ByteArrayInputStream(base64) {
-      val input = MessageInput(this)
-      apm.decodeTrack(input).decodedTrack
-    }
-  }
-
-  /**
-   * Encodes the supplied [AudioTrack] into a base64 string.
-   *
-   * @param apm The audio player manager.
-   * @param track The audio track to encode.
-   */
-  @JvmStatic
-  @Throws(java.io.IOException::class)
-  fun encodeAudioTrack(apm: AudioPlayerManager, track: AudioTrack): String = ByteArrayOutputStream {
-    apm.encodeTrack(MessageOutput(this), track)
-    Base64.encodeBase64String(toByteArray())
-  }
-
-  /**
-   * Convenience method for creatina an auto-closing [ByteArrayOutputStream].
-   *
-   * @param block
-   */
-  fun <T> ByteArrayOutputStream(block: ByteArrayOutputStream.() -> T): T {
-    return ByteArrayOutputStream()
-      .use(block)
-  }
-
-  /**
-   * Convenience method for creating an auto-closing [ByteArrayInputStream].
-   *
-   * @param block
-   */
-  fun <T> ByteArrayInputStream(buf: ByteArray, block: ByteArrayInputStream.() -> T): T {
-    return ByteArrayInputStream(buf)
-      .use(block)
-  }
-
-  fun getRootCause(throwable: Throwable): Throwable {
-    var rootCause = throwable
-
-    while (rootCause.cause != null) {
-      rootCause = rootCause.cause!!
+    /**
+     * Encodes the supplied [AudioTrack] into a base64 string.
+     *
+     * @param apm The audio player manager.
+     * @param track The audio track to encode.
+     */
+    @JvmStatic
+    @Throws(java.io.IOException::class)
+    fun encodeAudioTrack(apm: AudioPlayerManager, track: AudioTrack): String = ByteArrayOutputStream {
+        apm.encodeTrack(MessageOutput(this), track)
+        Base64.encodeBase64String(toByteArray())
     }
 
-    return rootCause
-  }
+    /**
+     * Convenience method for creatina an auto-closing [ByteArrayOutputStream].
+     *
+     * @param block
+     */
+    fun <T> ByteArrayOutputStream(block: ByteArrayOutputStream.() -> T): T {
+        return ByteArrayOutputStream()
+            .use(block)
+    }
+
+    /**
+     * Convenience method for creating an auto-closing [ByteArrayInputStream].
+     *
+     * @param block
+     */
+    fun <T> ByteArrayInputStream(buf: ByteArray, block: ByteArrayInputStream.() -> T): T {
+        return ByteArrayInputStream(buf)
+            .use(block)
+    }
+
+    fun getRootCause(throwable: Throwable): Throwable {
+        var rootCause = throwable
+
+        while (rootCause.cause != null) {
+            rootCause = rootCause.cause!!
+        }
+
+        return rootCause
+    }
 }

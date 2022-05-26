@@ -25,11 +25,10 @@ package lavalink.server.info
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-
 import java.io.IOException
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Properties
+import java.util.*
 
 /**
  * Created by napster on 25.06.18.
@@ -41,46 +40,46 @@ import java.util.Properties
  */
 @Component
 class GitRepoState {
-  companion object {
-    private val log = LoggerFactory.getLogger(GitRepoState::class.java)
-  }
-
-  final val branch: String
-  private val commitId: String
-  final val commitIdAbbrev: String
-  private val commitUserName: String
-  private val commitUserEmail: String
-  private val commitMessageFull: String
-  private val commitMessageShort: String
-  final val commitTime: Long //epoch seconds
-  final var loaded = false
-
-  init {
-    val properties = Properties()
-    try {
-      properties.load(GitRepoState::class.java.classLoader.getResourceAsStream("git.properties"))
-      loaded = true
-    } catch (e: NullPointerException) {
-      log.trace("Failed to load git repo information. Did you build with the git gradle plugin? Is the git.properties file present?")
-    } catch (e: IOException) {
-      log.info("Failed to load git repo information due to suspicious IOException", e)
+    companion object {
+        private val log = LoggerFactory.getLogger(GitRepoState::class.java)
     }
 
-    branch = properties.getOrDefault("git.branch", "").toString()
-    commitId = properties.getOrDefault("git.commit.id", "").toString()
-    commitIdAbbrev = properties.getOrDefault("git.commit.id.abbrev", "").toString()
-    commitUserName = properties.getOrDefault("git.commit.user.name", "").toString()
-    commitUserEmail = properties.getOrDefault("git.commit.user.email", "").toString()
-    commitMessageFull = properties.getOrDefault("git.commit.message.full", "").toString()
-    commitMessageShort = properties.getOrDefault("git.commit.message.short", "").toString()
-    val time = properties["git.commit.time"].toString()
-    commitTime = if (time == "null") {
-      0
-    } else {
-      // https://github.com/n0mer/gradle-git-properties/issues/71
-      val dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
-      OffsetDateTime.from(dtf.parse(time)).toEpochSecond()
+    final val branch: String
+    private val commitId: String
+    final val commitIdAbbrev: String
+    private val commitUserName: String
+    private val commitUserEmail: String
+    private val commitMessageFull: String
+    private val commitMessageShort: String
+    final val commitTime: Long //epoch seconds
+    final var loaded = false
+
+    init {
+        val properties = Properties()
+        try {
+            properties.load(GitRepoState::class.java.classLoader.getResourceAsStream("git.properties"))
+            loaded = true
+        } catch (e: NullPointerException) {
+            log.trace("Failed to load git repo information. Did you build with the git gradle plugin? Is the git.properties file present?")
+        } catch (e: IOException) {
+            log.info("Failed to load git repo information due to suspicious IOException", e)
+        }
+
+        branch = properties.getOrDefault("git.branch", "").toString()
+        commitId = properties.getOrDefault("git.commit.id", "").toString()
+        commitIdAbbrev = properties.getOrDefault("git.commit.id.abbrev", "").toString()
+        commitUserName = properties.getOrDefault("git.commit.user.name", "").toString()
+        commitUserEmail = properties.getOrDefault("git.commit.user.email", "").toString()
+        commitMessageFull = properties.getOrDefault("git.commit.message.full", "").toString()
+        commitMessageShort = properties.getOrDefault("git.commit.message.short", "").toString()
+        val time = properties["git.commit.time"].toString()
+        commitTime = if (time == "null") {
+            0
+        } else {
+            // https://github.com/n0mer/gradle-git-properties/issues/71
+            val dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ")
+            OffsetDateTime.from(dtf.parse(time)).toEpochSecond()
+        }
     }
-  }
 }
 

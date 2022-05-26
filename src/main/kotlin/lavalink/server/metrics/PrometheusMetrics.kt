@@ -30,9 +30,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
-
-import javax.management.NotificationEmitter
 import java.lang.management.ManagementFactory
+import javax.management.NotificationEmitter
 
 /**
  * Created by napster on 08.05.18.
@@ -42,30 +41,30 @@ import java.lang.management.ManagementFactory
 @ConditionalOnProperty("metrics.prometheus.enabled")
 class PrometheusMetrics {
 
-  companion object {
-    private val log = LoggerFactory.getLogger(PrometheusMetrics::class.java)
-  }
-
-  init {
-    val prometheusAppender = InstrumentedAppender()
-    //log metrics
-    val factory = LoggerFactory.getILoggerFactory() as LoggerContext
-    val root = factory.getLogger(Logger.ROOT_LOGGER_NAME)
-    prometheusAppender.context = root.loggerContext
-    prometheusAppender.start()
-    root.addAppender(prometheusAppender)
-
-    //jvm (hotspot) metrics
-    DefaultExports.initialize()
-
-    //gc pause buckets
-    val gcNotificationListener = GcNotificationListener()
-    for (gcBean in ManagementFactory.getGarbageCollectorMXBeans()) {
-      if (gcBean is NotificationEmitter) {
-        (gcBean as NotificationEmitter).addNotificationListener(gcNotificationListener, null, gcBean)
-      }
+    companion object {
+        private val log = LoggerFactory.getLogger(PrometheusMetrics::class.java)
     }
 
-    log.info("Prometheus metrics set up")
-  }
+    init {
+        val prometheusAppender = InstrumentedAppender()
+        //log metrics
+        val factory = LoggerFactory.getILoggerFactory() as LoggerContext
+        val root = factory.getLogger(Logger.ROOT_LOGGER_NAME)
+        prometheusAppender.context = root.loggerContext
+        prometheusAppender.start()
+        root.addAppender(prometheusAppender)
+
+        //jvm (hotspot) metrics
+        DefaultExports.initialize()
+
+        //gc pause buckets
+        val gcNotificationListener = GcNotificationListener()
+        for (gcBean in ManagementFactory.getGarbageCollectorMXBeans()) {
+            if (gcBean is NotificationEmitter) {
+                (gcBean as NotificationEmitter).addNotificationListener(gcNotificationListener, null, gcBean)
+            }
+        }
+
+        log.info("Prometheus metrics set up")
+    }
 }

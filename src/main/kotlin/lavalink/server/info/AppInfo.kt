@@ -25,9 +25,8 @@ package lavalink.server.info
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-
 import java.io.IOException
-import java.util.Properties
+import java.util.*
 
 /**
  * Created by napster on 25.06.18.
@@ -37,39 +36,39 @@ import java.util.Properties
  */
 @Component
 class AppInfo {
-  companion object {
-    private val log = LoggerFactory.getLogger(AppInfo::class.java)
-  }
-
-  final val version: String
-  private val groupId: String
-  private val artifactId: String
-  final val buildNumber: String
-  final val buildTime: Long
-
-  init {
-    val resourceAsStream = this.javaClass.getResourceAsStream("/app.properties")
-    val prop = Properties()
-
-    try {
-      prop.load(resourceAsStream)
-    } catch (e: IOException) {
-      log.error("Failed to load app.properties", e)
+    companion object {
+        private val log = LoggerFactory.getLogger(AppInfo::class.java)
     }
 
-    this.version = prop.getProperty("version")
-    groupId = prop.getProperty("groupId")
-    artifactId = prop.getProperty("artifactId")
-    buildNumber = prop.getProperty("buildNumber")
-    var bTime = -1L
-    try {
-      bTime = prop.getProperty("buildTime").toLong()
-    } catch (ignored: NumberFormatException) {
-    }
-    this.buildTime = bTime
-  }
+    final val version: String
+    private val groupId: String
+    private val artifactId: String
+    final val buildNumber: String
+    final val buildTime: Long
 
-  fun getVersionBuild(): String {
-    return this.version + "_" + this.buildNumber
-  }
+    init {
+        val resourceAsStream = this.javaClass.getResourceAsStream("/app.properties")
+        val prop = Properties()
+
+        try {
+            prop.load(resourceAsStream)
+        } catch (e: IOException) {
+            log.error("Failed to load app.properties", e)
+        }
+
+        this.version = prop.getProperty("version")
+        groupId = prop.getProperty("groupId")
+        artifactId = prop.getProperty("artifactId")
+        buildNumber = prop.getProperty("buildNumber")
+        var bTime = -1L
+        try {
+            bTime = prop.getProperty("buildTime").toLong()
+        } catch (ignored: NumberFormatException) {
+        }
+        this.buildTime = bTime
+    }
+
+    fun getVersionBuild(): String {
+        return this.version + "_" + this.buildNumber
+    }
 }

@@ -40,22 +40,22 @@ import javax.servlet.http.HttpServletRequest
  */
 @RestController
 class InfoRestHandler(private val appInfo: AppInfo) {
-  @GetMapping("/version")
-  fun version(): String {
-    return appInfo.getVersionBuild()
-  }
+    @GetMapping("/version")
+    fun version(): String {
+        return appInfo.getVersionBuild()
+    }
 
-  @GetMapping(value = ["/versions"], produces = ["application/json"])
-  @ResponseBody
-  fun getVersions(request: HttpServletRequest): ResponseEntity<String> {
-    val versions = JSONObject()
-      .put("SPRING", SpringBootVersion.getVersion())
-      .put("BUILD", appInfo.buildNumber.takeUnless { it.startsWith("@") } ?: "Unofficial")
-      .put("LAVAPLAYER", PlayerLibrary.VERSION)
-      .put("JVM", System.getProperty("java.version"))
-      .put("KOTLIN", KotlinVersion.CURRENT)
-      .put("BUILDTIME", appInfo.buildTime)
+    @GetMapping(value = ["/versions"], produces = ["application/json"])
+    @ResponseBody
+    fun getVersions(request: HttpServletRequest): ResponseEntity<String> {
+        val versions = JSONObject()
+            .put("SPRING", SpringBootVersion.getVersion())
+            .put("BUILD", appInfo.buildNumber.takeUnless { it.startsWith("@") } ?: "Unofficial")
+            .put("LAVAPLAYER", PlayerLibrary.VERSION)
+            .put("JVM", System.getProperty("java.version"))
+            .put("KOTLIN", KotlinVersion.CURRENT)
+            .put("BUILDTIME", appInfo.buildTime)
 
-    return ResponseEntity(versions.toString(), HttpStatus.OK)
-  }
+        return ResponseEntity(versions.toString(), HttpStatus.OK)
+    }
 }

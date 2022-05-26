@@ -32,120 +32,120 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-
-import javax.servlet.http.HttpServletRequest
 import java.io.IOException
 import java.util.concurrent.CompletionStage
+import javax.servlet.http.HttpServletRequest
 
 @RestController
 class AudioLoaderRestHandler(
-  private val audioPlayerManager: AudioPlayerManager
+    private val audioPlayerManager: AudioPlayerManager
 ) {
-  companion object {
-    private val log = LoggerFactory.getLogger(AudioLoaderRestHandler::class.java)
-  }
-  
-  private fun log(request: HttpServletRequest) {
-    log.info("${request.method} ${request.servletPath}")
-  }
-
-  private fun trackToJSON(audioTrack: AudioTrack): JSONObject {
-    val trackInfo = audioTrack.info
-
-    return JSONObject()
-      .put("title", trackInfo.title)
-      .put("author", trackInfo.author)
-      .put("length", trackInfo.length)
-      .put("identifier", trackInfo.identifier)
-      .put("uri", trackInfo.uri)
-      .put("isStream", trackInfo.isStream)
-      .put("isSeekable", audioTrack.isSeekable)
-      .put("sourceName", audioTrack.sourceManager?.sourceName)
-      .put("position", audioTrack.position)
-      .put("thumbnail", trackInfo.artworkUrl)
-  }
-
-  private fun encodeLoadResult(result: LoadResult): JSONObject {
-    val json = JSONObject()
-    val playlist = JSONObject()
-    val tracks = JSONArray()
-
-    result.tracks.forEach {
-      val obj = JSONObject()
-      obj.put("info", trackToJSON(it))
-
-      try {
-        val encoded = Util.encodeAudioTrack(audioPlayerManager, it)
-        obj.put("track", encoded)
-        tracks.put(obj)
-      } catch (e: IOException) {
-        log.warn("Failed to encode a track ${it.identifier}, skipping", e)
-      }
+    companion object {
+        private val log = LoggerFactory.getLogger(AudioLoaderRestHandler::class.java)
     }
 
-    playlist.put("name", result.playlistName)
-    playlist.put("selectedTrack", result.selectedTrack)
-
-    json.put("playlistInfo", playlist)
-    json.put("loadType", result.loadResultType)
-    json.put("tracks", tracks)
-
-    if (result.loadResultType == ResultStatus.LOAD_FAILED && result.exception != null) {
-      val exception = JSONObject()
-      exception.put("message", result.exception.localizedMessage)
-      exception.put("severity", result.exception.severity.toString())
-
-      json.put("exception", exception)
+    private fun log(request: HttpServletRequest) {
+        log.info("${request.method} ${request.servletPath}")
     }
 
-    return json
-  }
+    private fun trackToJSON(audioTrack: AudioTrack): JSONObject {
+        val trackInfo = audioTrack.info
 
-  @GetMapping(value = ["/loadtracks"], produces = ["application/json"])
-  @ResponseBody
-  fun getLoadTracks(
-    @RequestParam identifier: String): CompletionStage<ResponseEntity<String>> {
-    log.info("Got request to load for identifier \"${identifier}\"")
-
-    return AudioLoader(audioPlayerManager).load(identifier)
-      .thenApply(this::encodeLoadResult)
-      .thenApply {
-        ResponseEntity(it.toString(), HttpStatus.OK)
-      }
-  }
-
-  @GetMapping(value = ["/decodetrack"], produces = ["application/json"])
-  @ResponseBody
-  @Throws(IOException::class)
-  fun getDecodeTrack(request: HttpServletRequest, @RequestParam track: String): ResponseEntity<String> {
-    log(request)
-
-    val audioTrack = Util.decodeAudioTrack(audioPlayerManager, track)
-
-    return ResponseEntity(trackToJSON(audioTrack).toString(), HttpStatus.OK)
-  }
-
-  @PostMapping(value = ["/decodetracks"], consumes = ["application/json"], produces = ["application/json"])
-  @ResponseBody
-  @Throws(IOException::class)
-  fun postDecodeTracks(request: HttpServletRequest, @RequestBody body: String): ResponseEntity<String> {
-    log(request)
-
-    val requestJSON = JSONArray(body)
-    val responseJSON = JSONArray()
-
-    for (i in 0 until requestJSON.length()) {
-      val track = requestJSON.getString(i)
-      val audioTrack = Util.decodeAudioTrack(audioPlayerManager, track)
-
-      val infoJSON = trackToJSON(audioTrack)
-      val trackJSON = JSONObject()
-        .put("track", track)
-        .put("info", infoJSON)
-
-      responseJSON.put(trackJSON)
+        return JSONObject()
+            .put("title", trackInfo.title)
+            .put("author", trackInfo.author)
+            .put("length", trackInfo.length)
+            .put("identifier", trackInfo.identifier)
+            .put("uri", trackInfo.uri)
+            .put("isStream", trackInfo.isStream)
+            .put("isSeekable", audioTrack.isSeekable)
+            .put("sourceName", audioTrack.sourceManager?.sourceName)
+            .put("position", audioTrack.position)
+            .put("thumbnail", trackInfo.artworkUrl)
     }
 
-    return ResponseEntity(responseJSON.toString(), HttpStatus.OK)
-  }
+    private fun encodeLoadResult(result: LoadResult): JSONObject {
+        val json = JSONObject()
+        val playlist = JSONObject()
+        val tracks = JSONArray()
+
+        result.tracks.forEach {
+            val obj = JSONObject()
+            obj.put("info", trackToJSON(it))
+
+            try {
+                val encoded = Util.encodeAudioTrack(audioPlayerManager, it)
+                obj.put("track", encoded)
+                tracks.put(obj)
+            } catch (e: IOException) {
+                log.warn("Failed to encode a track ${it.identifier}, skipping", e)
+            }
+        }
+
+        playlist.put("name", result.playlistName)
+        playlist.put("selectedTrack", result.selectedTrack)
+
+        json.put("playlistInfo", playlist)
+        json.put("loadType", result.loadResultType)
+        json.put("tracks", tracks)
+
+        if (result.loadResultType == ResultStatus.LOAD_FAILED && result.exception != null) {
+            val exception = JSONObject()
+            exception.put("message", result.exception.localizedMessage)
+            exception.put("severity", result.exception.severity.toString())
+
+            json.put("exception", exception)
+        }
+
+        return json
+    }
+
+    @GetMapping(value = ["/loadtracks"], produces = ["application/json"])
+    @ResponseBody
+    fun getLoadTracks(
+        @RequestParam identifier: String
+    ): CompletionStage<ResponseEntity<String>> {
+        log.info("Got request to load for identifier \"${identifier}\"")
+
+        return AudioLoader(audioPlayerManager).load(identifier)
+            .thenApply(this::encodeLoadResult)
+            .thenApply {
+                ResponseEntity(it.toString(), HttpStatus.OK)
+            }
+    }
+
+    @GetMapping(value = ["/decodetrack"], produces = ["application/json"])
+    @ResponseBody
+    @Throws(IOException::class)
+    fun getDecodeTrack(request: HttpServletRequest, @RequestParam track: String): ResponseEntity<String> {
+        log(request)
+
+        val audioTrack = Util.decodeAudioTrack(audioPlayerManager, track)
+
+        return ResponseEntity(trackToJSON(audioTrack).toString(), HttpStatus.OK)
+    }
+
+    @PostMapping(value = ["/decodetracks"], consumes = ["application/json"], produces = ["application/json"])
+    @ResponseBody
+    @Throws(IOException::class)
+    fun postDecodeTracks(request: HttpServletRequest, @RequestBody body: String): ResponseEntity<String> {
+        log(request)
+
+        val requestJSON = JSONArray(body)
+        val responseJSON = JSONArray()
+
+        for (i in 0 until requestJSON.length()) {
+            val track = requestJSON.getString(i)
+            val audioTrack = Util.decodeAudioTrack(audioPlayerManager, track)
+
+            val infoJSON = trackToJSON(audioTrack)
+            val trackJSON = JSONObject()
+                .put("track", track)
+                .put("info", infoJSON)
+
+            responseJSON.put(trackJSON)
+        }
+
+        return ResponseEntity(responseJSON.toString(), HttpStatus.OK)
+    }
 }

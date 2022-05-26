@@ -28,31 +28,31 @@ import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat
 
 class DistortionConfig(
-  private val sinOffset: Float = 0f,
-  private val sinScale: Float = 1f,
-  private val tanOffset: Float = 0f,
-  private val tanScale: Float = 1f,
-  private val cosOffset: Float = 0f,
-  private val cosScale: Float = 1f,
-  private val offset: Float = 0f,
-  private val scale: Float = 1f
-) : FilterConfig()  {
-  override fun build(format: AudioDataFormat, output: FloatPcmAudioFilter): FloatPcmAudioFilter {
-    return DistortionPcmAudioFilter(output, format.channelCount)
-      .setSinOffset(sinOffset)
-      .setSinScale(sinScale)
-      .setTanOffset(tanOffset)
-      .setTanScale(tanScale)
-      .setCosOffset(cosOffset)
-      .setCosScale(cosScale)
-      .setOffset(offset)
-      .setScale(scale)
-  }
+    private val sinOffset: Float = 0f,
+    private val sinScale: Float = 1f,
+    private val tanOffset: Float = 0f,
+    private val tanScale: Float = 1f,
+    private val cosOffset: Float = 0f,
+    private val cosScale: Float = 1f,
+    private val offset: Float = 0f,
+    private val scale: Float = 1f
+) : FilterConfig() {
+    override fun build(format: AudioDataFormat, output: FloatPcmAudioFilter): FloatPcmAudioFilter {
+        return DistortionPcmAudioFilter(output, format.channelCount)
+            .setSinOffset(sinOffset)
+            .setSinScale(sinScale)
+            .setTanOffset(tanOffset)
+            .setTanScale(tanScale)
+            .setCosOffset(cosOffset)
+            .setCosScale(cosScale)
+            .setOffset(offset)
+            .setScale(scale)
+    }
 
-  override fun isEnabled(): Boolean {
-    return isSet(sinOffset, 0f) || isSet(sinScale, 1f)
-            || isSet(tanOffset, 0f) || isSet(tanScale, 1f)
-            || isSet(cosOffset, 0f) || isSet(cosScale, 1f)
-            || isSet(offset, 0f) || isSet(scale, 1f)
-  }
+    override fun isEnabled(): Boolean {
+        return isSet(sinOffset, 0f) || isSet(sinScale, 1f)
+                || isSet(tanOffset, 0f) || isSet(tanScale, 1f)
+                || isSet(cosOffset, 0f) || isSet(cosScale, 1f)
+                || isSet(offset, 0f) || isSet(scale, 1f)
+    }
 }

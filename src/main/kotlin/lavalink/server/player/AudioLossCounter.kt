@@ -30,86 +30,88 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason
 import org.slf4j.LoggerFactory
 
 class AudioLossCounter : AudioEventAdapter() {
-  companion object {
-    val EXPECTED_PACKET_COUNT_PER_MIN = (60 * 1000) / 20 // 20ms packets
-    private val log = LoggerFactory.getLogger(AudioLossCounter::class.java)
-  }
-
-  private val ACCEPTABLE_TRACK_SWITCH_TIME = 100 //ms
-
-  private var curMinute = 0L
-  private var curLoss = 0
-  private var curSucc = 0
-
-  var lastLoss = 0
-  var lastSucc = 0
-
-  private var playingSince = Long.MAX_VALUE
-  private var lastTrackStarted = Long.MAX_VALUE / 2
-  private var lastTrackEnded = Long.MAX_VALUE
-
-  fun onLoss() {
-    checkTime()
-    curLoss++
-  }
-
-  fun onSuccess() {
-    checkTime()
-    curSucc++
-  }
-
-  fun isDataUsable(): Boolean {
-    //log.info("\n" + lastTrackStarted + "\n" + lastTrackEnded + "\n" + playingSince)
-
-    // Check that there isn't a significant gap in playback. If no track has ended yet, we can look past that
-    if (lastTrackStarted - lastTrackEnded > ACCEPTABLE_TRACK_SWITCH_TIME
-      && lastTrackEnded != Long.MAX_VALUE) return false
-
-    // Check that we have at least stats for last minute
-    val lastMin = System.currentTimeMillis() / 60000 - 1
-    //log.info((playingSince < lastMin * 60000) + "")
-    return playingSince < lastMin * 60000
-  }
-
-  private fun checkTime() {
-    val actualMinute = System.currentTimeMillis() / 60000
-
-    if (curMinute != actualMinute) {
-      lastLoss = curLoss
-      lastSucc = curSucc
-      curLoss = 0
-      curSucc = 0
-      curMinute = actualMinute
+    companion object {
+        val EXPECTED_PACKET_COUNT_PER_MIN = (60 * 1000) / 20 // 20ms packets
+        private val log = LoggerFactory.getLogger(AudioLossCounter::class.java)
     }
-  }
-  
-  override fun onTrackEnd(audioPlayer: AudioPlayer?, audioTrack: AudioTrack?, endReason: AudioTrackEndReason?) {
-    lastTrackEnded = System.currentTimeMillis()
-  }
 
-  override fun onTrackStart(player: AudioPlayer?, track: AudioTrack?) {
-    lastTrackStarted = System.currentTimeMillis()
+    private val ACCEPTABLE_TRACK_SWITCH_TIME = 100 //ms
 
-    if (lastTrackStarted - lastTrackEnded > ACCEPTABLE_TRACK_SWITCH_TIME
-      || playingSince == Long.MAX_VALUE) {
-      playingSince = System.currentTimeMillis()
-      lastTrackEnded = Long.MAX_VALUE
+    private var curMinute = 0L
+    private var curLoss = 0
+    private var curSucc = 0
+
+    var lastLoss = 0
+    var lastSucc = 0
+
+    private var playingSince = Long.MAX_VALUE
+    private var lastTrackStarted = Long.MAX_VALUE / 2
+    private var lastTrackEnded = Long.MAX_VALUE
+
+    fun onLoss() {
+        checkTime()
+        curLoss++
     }
-  }
 
-  override fun onPlayerPause(player: AudioPlayer) {
-    onTrackEnd(null, null, null)
-  }
+    fun onSuccess() {
+        checkTime()
+        curSucc++
+    }
 
-  override fun onPlayerResume(player: AudioPlayer) {
-    onTrackStart(null, null)
-  }
+    fun isDataUsable(): Boolean {
+        //log.info("\n" + lastTrackStarted + "\n" + lastTrackEnded + "\n" + playingSince)
 
-  override fun toString(): String {
-    return "AudioLossCounter{" +
-      "lastLoss=" + lastLoss +
-      ", lastSucc=" + lastSucc +
-      ", total=" + (lastSucc + lastLoss) +
-      '}'
-  }
+        // Check that there isn't a significant gap in playback. If no track has ended yet, we can look past that
+        if (lastTrackStarted - lastTrackEnded > ACCEPTABLE_TRACK_SWITCH_TIME
+            && lastTrackEnded != Long.MAX_VALUE
+        ) return false
+
+        // Check that we have at least stats for last minute
+        val lastMin = System.currentTimeMillis() / 60000 - 1
+        //log.info((playingSince < lastMin * 60000) + "")
+        return playingSince < lastMin * 60000
+    }
+
+    private fun checkTime() {
+        val actualMinute = System.currentTimeMillis() / 60000
+
+        if (curMinute != actualMinute) {
+            lastLoss = curLoss
+            lastSucc = curSucc
+            curLoss = 0
+            curSucc = 0
+            curMinute = actualMinute
+        }
+    }
+
+    override fun onTrackEnd(audioPlayer: AudioPlayer?, audioTrack: AudioTrack?, endReason: AudioTrackEndReason?) {
+        lastTrackEnded = System.currentTimeMillis()
+    }
+
+    override fun onTrackStart(player: AudioPlayer?, track: AudioTrack?) {
+        lastTrackStarted = System.currentTimeMillis()
+
+        if (lastTrackStarted - lastTrackEnded > ACCEPTABLE_TRACK_SWITCH_TIME
+            || playingSince == Long.MAX_VALUE
+        ) {
+            playingSince = System.currentTimeMillis()
+            lastTrackEnded = Long.MAX_VALUE
+        }
+    }
+
+    override fun onPlayerPause(player: AudioPlayer) {
+        onTrackEnd(null, null, null)
+    }
+
+    override fun onPlayerResume(player: AudioPlayer) {
+        onTrackStart(null, null)
+    }
+
+    override fun toString(): String {
+        return "AudioLossCounter{" +
+                "lastLoss=" + lastLoss +
+                ", lastSucc=" + lastSucc +
+                ", total=" + (lastSucc + lastLoss) +
+                '}'
+    }
 }

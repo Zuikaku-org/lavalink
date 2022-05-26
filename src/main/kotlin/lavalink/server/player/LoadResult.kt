@@ -27,17 +27,17 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 
 class LoadResult(
-  val loadResultType: ResultStatus,
-  val tracks: List<AudioTrack>,
-  val playlistName: String?,
-  val selectedTrack: Int?,
-  val exception: FriendlyException? = null
+    val loadResultType: ResultStatus,
+    val tracks: List<AudioTrack>,
+    val playlistName: String?,
+    val selectedTrack: Int?,
+    val exception: FriendlyException? = null
 ) {
-  constructor(exception: FriendlyException) : this(
-    ResultStatus.LOAD_FAILED,
-    listOf(),
-    null,
-    null,
-    exception
-  )
+    constructor(exception: FriendlyException) : this(
+        ResultStatus.LOAD_FAILED,
+        listOf(),
+        null,
+        null,
+        exception
+    )
 }

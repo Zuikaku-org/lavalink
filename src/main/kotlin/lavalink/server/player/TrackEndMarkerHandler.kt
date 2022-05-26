@@ -26,11 +26,11 @@ package lavalink.server.player
 import com.sedmelluq.discord.lavaplayer.track.TrackMarkerHandler
 
 class TrackEndMarkerHandler(
-  private val player: Player
+    private val player: Player
 ) : TrackMarkerHandler {
-  override fun handle(state: TrackMarkerHandler.MarkerState) {
-    if (state == TrackMarkerHandler.MarkerState.REACHED || state == TrackMarkerHandler.MarkerState.BYPASSED) {
-      player.stop()
+    override fun handle(state: TrackMarkerHandler.MarkerState) {
+        if (state == TrackMarkerHandler.MarkerState.REACHED || state == TrackMarkerHandler.MarkerState.BYPASSED) {
+            player.stop()
+        }
     }
-  }
 }

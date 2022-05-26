@@ -34,11 +34,11 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 class WebsocketConfig @Autowired constructor(
-  private val server: SocketServer,
-  private val handshakeInterceptor: HandshakeInterceptorImpl
+    private val server: SocketServer,
+    private val handshakeInterceptor: HandshakeInterceptorImpl
 ) : WebSocketConfigurer {
-  override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-    registry.addHandler(server, "/")
-      .addInterceptors(handshakeInterceptor)
-  }
+    override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
+        registry.addHandler(server, "/")
+            .addInterceptors(handshakeInterceptor)
+    }
 }

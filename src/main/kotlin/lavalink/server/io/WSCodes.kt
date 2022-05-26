@@ -24,8 +24,8 @@
 package lavalink.server.io
 
 class WSCodes {
-  companion object {
-    val INTERNAL_ERROR = 4000
-    val AUTHORIZATION_REJECTED = 4001
-  }
+    companion object {
+        val INTERNAL_ERROR = 4000
+        val AUTHORIZATION_REJECTED = 4001
+    }
 }

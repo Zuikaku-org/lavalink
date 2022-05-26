@@ -40,20 +40,20 @@ import javax.management.openmbean.CompositeData
  */
 class GcNotificationListener : NotificationListener {
 
-  private val gcPauses = Histogram.build()
-    .name("lavalink_gc_pauses_seconds")
-    .help("Garbage collection pauses by buckets")
-    .buckets(0.025, 0.050, 0.100, 0.200, 0.400, 0.800, 1.600)
-    .register()
+    private val gcPauses = Histogram.build()
+        .name("lavalink_gc_pauses_seconds")
+        .help("Garbage collection pauses by buckets")
+        .buckets(0.025, 0.050, 0.100, 0.200, 0.400, 0.800, 1.600)
+        .register()
 
-  override fun handleNotification(notification: Notification, handback: Any) {
-    if (GARBAGE_COLLECTION_NOTIFICATION == notification.type) {
-      val notificationInfo = from(notification.userData as CompositeData)
-      val info = notificationInfo.gcInfo
+    override fun handleNotification(notification: Notification, handback: Any) {
+        if (GARBAGE_COLLECTION_NOTIFICATION == notification.type) {
+            val notificationInfo = from(notification.userData as CompositeData)
+            val info = notificationInfo.gcInfo
 
-      if (info != null && "No GC" != notificationInfo.gcCause) {
-        gcPauses.observe(info.duration / Collector.MILLISECONDS_PER_SECOND)
-      }
+            if (info != null && "No GC" != notificationInfo.gcCause) {
+                gcPauses.observe(info.duration / Collector.MILLISECONDS_PER_SECOND)
+            }
+        }
     }
-  }
 }

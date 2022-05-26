@@ -46,29 +46,29 @@ import java.io.StringWriter
 @RequestMapping("\${metrics.prometheus.endpoint:/metrics}")
 @ConditionalOnBean(PrometheusMetrics::class)
 class PrometheusMetricsController {
-  private val registry = CollectorRegistry.defaultRegistry
+    private val registry = CollectorRegistry.defaultRegistry
 
-  @GetMapping(produces = [TextFormat.CONTENT_TYPE_004])
-  @Throws(IOException::class)
-  fun getMetrics(@RequestParam(name = "name[]", required = false) includedParam: Array<String>?):
-  ResponseEntity<String> {
-    return buildAnswer(includedParam)
-  }
-
-  @Throws(IOException::class)
-  private fun  buildAnswer(includedParam: Array<String>?): ResponseEntity<String> {
-    val params: Set<String> = if (includedParam == null) {
-      setOf()
-    } else {
-      hashSetOf(*includedParam)
+    @GetMapping(produces = [TextFormat.CONTENT_TYPE_004])
+    @Throws(IOException::class)
+    fun getMetrics(@RequestParam(name = "name[]", required = false) includedParam: Array<String>?):
+            ResponseEntity<String> {
+        return buildAnswer(includedParam)
     }
 
-    val writer = StringWriter()
-    writer.use {
-      TextFormat.write004(it, this.registry.filteredMetricFamilySamples(params))
-      it.flush()
-    }
+    @Throws(IOException::class)
+    private fun buildAnswer(includedParam: Array<String>?): ResponseEntity<String> {
+        val params: Set<String> = if (includedParam == null) {
+            setOf()
+        } else {
+            hashSetOf(*includedParam)
+        }
 
-    return ResponseEntity<String>(writer.toString(), HttpStatus.OK)
-  }
+        val writer = StringWriter()
+        writer.use {
+            TextFormat.write004(it, this.registry.filteredMetricFamilySamples(params))
+            it.flush()
+        }
+
+        return ResponseEntity<String>(writer.toString(), HttpStatus.OK)
+    }
 }
