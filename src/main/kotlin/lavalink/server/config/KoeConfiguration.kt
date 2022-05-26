@@ -30,6 +30,13 @@ import io.netty.channel.epoll.Epoll
 import io.netty.channel.epoll.EpollDatagramChannel
 import io.netty.channel.epoll.EpollEventLoopGroup
 import io.netty.channel.epoll.EpollSocketChannel
+import io.netty.channel.kqueue.KQueue
+import io.netty.channel.kqueue.KQueueDatagramChannel
+import io.netty.channel.kqueue.KQueueEventLoopGroup
+import io.netty.channel.kqueue.KQueueSocketChannel
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.nio.NioDatagramChannel
+import io.netty.channel.socket.nio.NioSocketChannel
 import moe.kyokobot.koe.KoeOptions
 import moe.kyokobot.koe.codec.udpqueue.UdpQueueFramePollerFactory
 import moe.kyokobot.koe.gateway.GatewayVersion
@@ -54,8 +61,11 @@ class KoeConfiguration(val configProperties: KoeConfigProperties) {
 
     /* JDA-NAS */
     // Maybe add Windows natives back?
-    val nasSupported = os.contains("linux", true)
-      && arch.equals("amd64", true)
+    val nasSupported =
+      (os.contains("linux", true)
+              && (arch.equals("amd64", true) || arch.equals("x86", true) || arch.equals("aarch64", true)))
+              || os.contains("mac", true)
+              || (os.contains("win", true) && arch.equals("amd64") || arch.equals("x86"))
 
     if (nasSupported) {
       log.info("Enabling JDA-NAS")
@@ -72,12 +82,24 @@ class KoeConfiguration(val configProperties: KoeConfigProperties) {
         + "GC pauses may cause your bot to stutter during playback.")
     }
 
-    /* Epoll Transport */
     if (configProperties.useEpoll && Epoll.isAvailable()) {
+      /* Epoll Transport */
       log.info("Using Epoll Transport.")
       setEventLoopGroup(EpollEventLoopGroup())
       setDatagramChannelClass(EpollDatagramChannel::class.java)
       setSocketChannelClass(EpollSocketChannel::class.java)
+    } else if (configProperties.useKQueue && KQueue.isAvailable()) {
+      /* KQueue Transport */
+      log.info("Using KQueue Transport.")
+      setEventLoopGroup(KQueueEventLoopGroup())
+      setDatagramChannelClass(KQueueDatagramChannel::class.java)
+      setSocketChannelClass(KQueueSocketChannel::class.java)
+    } else {
+      /* Nio Transport */
+      log.info("Using Nio Transport.")
+      setEventLoopGroup(NioEventLoopGroup())
+      setDatagramChannelClass(NioDatagramChannel::class.java)
+      setSocketChannelClass(NioSocketChannel::class.java)
     }
 
     /* Byte Buf Allocator */

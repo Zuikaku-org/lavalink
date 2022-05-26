@@ -24,9 +24,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
-  val kotlinVersion = "1.6.10"
+  val kotlinVersion = "1.6.21"
   val gradleGitVersion = "2.3.2"
-  val springBootVersion = "2.6.5"
+  val springBootVersion = "2.7.0"
   val sonarqubeVersion = "3.3"
   val testLoggerVersion = "3.1.0"
 
@@ -50,11 +50,11 @@ buildscript {
 plugins {
   application
   idea
-  id("org.springframework.boot") version "2.6.5"
+  id("org.springframework.boot") version "2.7.0"
   id("com.gorylenko.gradle-git-properties") version "2.3.2"
   id("org.ajoberstar.grgit") version "4.1.1"
-  kotlin("jvm") version "1.6.10"
-  kotlin("plugin.spring") version "1.6.10"
+  kotlin("jvm") version "1.6.21"
+  kotlin("plugin.spring") version "1.6.21"
   id("com.adarshr.test-logger") version "3.1.0"
 }
 
@@ -77,21 +77,21 @@ repositories {
   maven("https://m2.dv8tion.net/releases")
 }
 
-val kotlinVersion = "1.6.10"
+val kotlinVersion = "1.6.21"
 
-val lavaplayerVersion = "0db9ab6"
+val lavaplayerVersion = "ff39f53"
 val lavaplayerIpRotatorVersion = "0.2.3"
-val nettyEpollVersion = "4.1.75.Final:linux-x86_64"
-val lavadspVersion = "0.7.7"
+val nettyEpollVersion = "4.1.77.Final"
+val lavadspVersion = "0.7.8"
 val librespotLibVersion = "020ca70"
 
-val springBootVersion = "2.6.5"
-val springWebSocketVersion = "5.3.17"
+val springBootVersion = "2.7.0"
+val springWebSocketVersion = "5.3.20"
 val prometheusVersion = "0.15.0"
-val koeVersion = "10ff1a6"
+val koeVersion = "b03db05"
 val logbackVersion = "1.2.11"
-val sentryVersion = "5.7.0"
-val oshiVersion = "6.1.5"
+val sentryVersion = "5.7.4"
+val oshiVersion = "6.1.6"
 val jsonOrgVersion = "20220320"
 val gsonVersion = "2.9.0"
 val spotbugsAnnotationsVersion = "4.6.0"
@@ -102,6 +102,7 @@ dependencies {
   // Audio Sending
   implementation("com.github.davidffa.koe:ext-udpqueue:$koeVersion") {
     exclude("com.sedmelluq", "lavaplayer")
+    exclude("com.sedmelluq", "lava-common")
   }
   implementation("com.github.davidffa.koe:core:$koeVersion") {
     exclude("org.slf4j", "slf4j-api")
@@ -109,7 +110,8 @@ dependencies {
   }
 
   // Transport
-  implementation("io.netty:netty-transport-native-epoll:$nettyEpollVersion")
+  implementation("io.netty:netty-transport-native-epoll:$nettyEpollVersion:linux-x86_64")
+  implementation("io.netty:netty-transport-native-kqueue:$nettyEpollVersion:osx-aarch_64")
 
   // Audio Player
   implementation("com.github.davidffa:lavaplayer-fork:$lavaplayerVersion")
@@ -118,7 +120,7 @@ dependencies {
   }
 
   // Filters
-  implementation("com.github.natanbc:lavadsp:$lavadspVersion") {
+  implementation("com.github.davidffa:lavadsp-fork:$lavadspVersion") {
     exclude("com.sedmelluq", "lavaplayer")
   }
 

@@ -9,6 +9,7 @@ lavalink:
     statsTaskInterval: 60 # How frequently to send the node stats to clients, in seconds
     koe:
       useEpoll: true
+      useKQueue: false # Native transport for Darwin Aarch64
       highPacketPriority: true
       bufferDurationMs: 400
       byteBufAllocator: default
@@ -20,6 +21,7 @@ lavalink:
       http: true
       odysee: true
       reddit: true
+      rumble: true
       soundcloud: true
       tiktok: true
       twitch: true

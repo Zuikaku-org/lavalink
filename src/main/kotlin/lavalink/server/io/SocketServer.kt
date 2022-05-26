@@ -94,13 +94,13 @@ class SocketServer(
     log.warn("Library developers: Please specify a 'Client-Name' header.")
   }
 
-  override fun afterConnectionClosed(session: WebSocketSession?, status: CloseStatus?) {
-    val context = contextMap.remove(session!!.id) ?: return
+  override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+    val context = contextMap.remove(session.id) ?: return
     if (context.resumeKey != null) {
       resumableSessions.remove(context.resumeKey!!)?.let { removed ->
         log.warn(
           "Shutdown resumable session with key ${removed.resumeKey} because it has the same key as a " +
-            "newly disconnected resumable session."
+                  "newly disconnected resumable session."
         )
         removed.shutdown()
       }
@@ -123,9 +123,9 @@ class SocketServer(
     context.shutdown()
   }
 
-  override fun handleTextMessage(session: WebSocketSession?, message: TextMessage?) {
+  override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
     try {
-      handleTextMessageSafe(session!!, message!!)
+      handleTextMessageSafe(session, message)
     } catch (e: Exception) {
       log.error("Exception while handling websocket message", e)
     }
