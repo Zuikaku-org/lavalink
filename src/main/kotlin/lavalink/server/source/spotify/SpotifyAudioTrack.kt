@@ -9,11 +9,17 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo
 import com.sedmelluq.discord.lavaplayer.track.DelegatedAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.InternalAudioTrack
 import com.sedmelluq.discord.lavaplayer.track.playback.LocalAudioTrackExecutor
+import com.spotify.metadata.Metadata
+import lavalink.server.source.spotify.decoder.AacOnlyAudioQuality
+import lavalink.server.source.spotify.decoder.Mp3OnlyAudioQuality
 import org.slf4j.LoggerFactory
 import xyz.gianlu.librespot.audio.decoders.AudioQuality
 import xyz.gianlu.librespot.audio.decoders.VorbisOnlyAudioQuality
+import xyz.gianlu.librespot.audio.format.AudioQualityPicker
 import xyz.gianlu.librespot.audio.format.SuperAudioFormat
+import xyz.gianlu.librespot.metadata.EpisodeId
 import xyz.gianlu.librespot.metadata.PlayableId
+import xyz.gianlu.librespot.metadata.TrackId
 
 class SpotifyAudioTrack(trackInfo: AudioTrackInfo, private val spotifyAudioSourceManager: SpotifyAudioSourceManager) :
     DelegatedAudioTrack(trackInfo) {
@@ -31,52 +37,52 @@ class SpotifyAudioTrack(trackInfo: AudioTrackInfo, private val spotifyAudioSourc
                     "spotify:track:" + trackInfo.identifier
                 }
             // Connection timeout issue when trying to playing the track
-//            val metadataTrackOrEpisode =
-//                if (trackInfo.uri.startsWith("https://open.spotify.com/episode")) {
-//                    spotifyAudioSourceManager
-//                        .spotifySession?.api()?.getMetadata4Episode(EpisodeId.fromUri(playableURI))
-//                } else {
-//                    spotifyAudioSourceManager
-//                        .spotifySession?.api()?.getMetadata4Track(TrackId.fromUri(playableURI))
-//                }
-//            var audioFile: List<AudioFile> = ArrayList()
-//            if (metadataTrackOrEpisode is Episode) {
-//                audioFile = metadataTrackOrEpisode.audioList
-//            }
-//            if (metadataTrackOrEpisode is Track) {
-//                audioFile = metadataTrackOrEpisode.fileList
-//            }
-//            val audioFormat: MutableList<SuperAudioFormat> = ArrayList()
-//            for (audioFileIterator in audioFile.iterator()) {
-//                audioFormat.add((SuperAudioFormat::get)(audioFileIterator.format))
-//            }
-//            var finalAudioFile: AudioFile? = null
-//            if (
-//                audioFormat.contains(SuperAudioFormat.VORBIS)
-//            ) {
-//                finalAudioFile = VorbisOnlyAudioQuality(audioQualityPreferred).getFile(audioFile)
-//            } else if (
-//                !audioFormat.contains(SuperAudioFormat.VORBIS) &&
-//                audioFormat.contains(SuperAudioFormat.AAC)
-//            ) {
-//                finalAudioFile = AacOnlyAudioQuality(audioQualityPreferred).getFile(audioFile)
-//            } else if (
-//                !audioFormat.contains(SuperAudioFormat.VORBIS) &&
-//                !audioFormat.contains(SuperAudioFormat.AAC) &&
-//                audioFormat.contains(SuperAudioFormat.AAC)
-//            ) {
-//                finalAudioFile = Mp3OnlyAudioQuality(audioQualityPreferred).getFile(audioFile)
-//            }
+            val metadataTrackOrEpisode =
+                if (trackInfo.uri.startsWith("https://open.spotify.com/episode")) {
+                    spotifyAudioSourceManager
+                        .spotifySession?.api()?.getMetadata4Episode(EpisodeId.fromUri(playableURI))
+                } else {
+                    spotifyAudioSourceManager
+                        .spotifySession?.api()?.getMetadata4Track(TrackId.fromUri(playableURI))
+                }
+            var audioFile: List<Metadata.AudioFile> = ArrayList()
+            if (metadataTrackOrEpisode is Metadata.Episode) {
+                audioFile = metadataTrackOrEpisode.audioList
+            }
+            if (metadataTrackOrEpisode is Metadata.Track) {
+                audioFile = metadataTrackOrEpisode.fileList
+            }
+            val audioFormat: MutableList<SuperAudioFormat> = ArrayList()
+            for (audioFileIterator in audioFile.iterator()) {
+                audioFormat.add((SuperAudioFormat::get)(audioFileIterator.format))
+            }
+            var finalAudioFile: Metadata.AudioFile? = null
+            if (
+                audioFormat.contains(SuperAudioFormat.VORBIS)
+            ) {
+                finalAudioFile = VorbisOnlyAudioQuality(audioQualityPreferred).getFile(audioFile)
+            } else if (
+                !audioFormat.contains(SuperAudioFormat.VORBIS) &&
+                audioFormat.contains(SuperAudioFormat.AAC)
+            ) {
+                finalAudioFile = AacOnlyAudioQuality(audioQualityPreferred).getFile(audioFile)
+            } else if (
+                !audioFormat.contains(SuperAudioFormat.VORBIS) &&
+                !audioFormat.contains(SuperAudioFormat.AAC) &&
+                audioFormat.contains(SuperAudioFormat.AAC)
+            ) {
+                finalAudioFile = Mp3OnlyAudioQuality(audioQualityPreferred).getFile(audioFile)
+            }
             val playableId = PlayableId.fromUri(playableURI)
             val loadedStream = spotifyAudioSourceManager
                 .spotifySession?.contentFeeder()?.load(
                     playableId,
-//                    (if (finalAudioFile == null) {
-//                        VorbisOnlyAudioQuality(audioQualityPreferred)
-//                    } else {
-//                        AudioQualityPicker { finalAudioFile }
-//                    }),
-                    VorbisOnlyAudioQuality(audioQualityPreferred),
+                    (if (finalAudioFile == null) {
+                        VorbisOnlyAudioQuality(audioQualityPreferred)
+                    } else {
+                        AudioQualityPicker { finalAudioFile }
+                    }),
+//                    VorbisOnlyAudioQuality(audioQualityPreferred),
                     true,
                     null
                 )
